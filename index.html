@@ -332,63 +332,74 @@ function expandRow(a,isProg){
 }
 
 // ── Save to Supabase (upsert row id=1) ──────────────────────
+// ── Save to Supabase ───────────────────────────────────────
+// Strategy: DELETE all + INSERT new (bulletproof, no upsert complexity)
+function sbRequest(method, url, payload, headers, cb){
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, url);
+  var h = Object.assign({}, SB_HDRS, headers||{});
+  Object.keys(h).forEach(function(k){ xhr.setRequestHeader(k, h[k]); });
+  xhr.onload = function(){ cb(xhr.status, xhr.responseText); };
+  xhr.onerror = function(){ cb(0, 'network error'); };
+  xhr.send(payload ? JSON.stringify(payload) : null);
+}
+
 function sbSave(isProg, allData, meta, onDone){
   var table   = isProg ? 'programas_data' : 'cursos_data';
-  var compact = allData.map(function(r){return compactRow(r,isProg);});
-  var payload = JSON.stringify([{id:1, rows:compact, meta:meta, updated_at:new Date().toISOString()}]);
-  var url     = SB_URL+'/rest/v1/'+table+'?on_conflict=id';
-  var infoEl  = g(isProg?'dpLoadTime':'dcLoadTime');
+  var compact = allData.map(function(r){ return compactRow(r, isProg); });
+  var infoEl  = g(isProg ? 'dpLoadTime' : 'dcLoadTime');
 
-  var xhr=new XMLHttpRequest();
-  xhr.open('POST', url);
-  Object.keys(SB_HDRS).forEach(function(k){xhr.setRequestHeader(k,SB_HDRS[k]);});
-  xhr.setRequestHeader('Prefer','resolution=merge-duplicates,return=minimal');
-  xhr.onload=function(){
-    if(xhr.status>=200&&xhr.status<300){
-      console.log('[Supabase] Saved '+(isProg?'Programas':'Cursos')+' OK ('+Math.round(JSON.stringify(compact).length/1024)+' KB)');
-      if(infoEl)infoEl.textContent=meta.loadTime+' \u2713 guardado en la nube';
-      // Cache locally for instant next load
-      try{localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs',JSON.stringify({rows:compact,meta:meta}));}catch(e){}
-      if(onDone)onDone(null);
+  function finish(ok){
+    if(ok){
+      console.log('[Supabase] Saved '+(isProg?'Programas':'Cursos')+' ('+Math.round(JSON.stringify(compact).length/1024)+' KB)');
+      if(infoEl) infoEl.textContent = meta.loadTime + ' \u2713 guardado en la nube';
+      try{ localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs', JSON.stringify({rows:compact,meta:meta})); }catch(e){}
+      if(onDone) onDone(null);
     }else{
-      console.error('[Supabase] Save error:',xhr.status,xhr.responseText);
-      if(infoEl)infoEl.textContent=meta.loadTime+' \u26a0 error al guardar';
-      if(onDone)onDone('HTTP '+xhr.status);
+      if(infoEl) infoEl.textContent = meta.loadTime + ' \u26a0 error al guardar';
+      if(onDone) onDone('error');
     }
-  };
-  xhr.onerror=function(){
-    console.error('[Supabase] Network error');
-    if(onDone)onDone('network error');
-  };
-  xhr.send(payload);
+  }
+
+  // Step 1: DELETE all existing rows
+  sbRequest('DELETE', SB_URL+'/rest/v1/'+table+'?id=gte.0', null, {'Prefer':'return=minimal'}, function(s1){
+    // Step 2: INSERT new row (ignore delete errors, table might be empty)
+    var row = { rows: compact, meta: meta, updated_at: new Date().toISOString() };
+    sbRequest('POST', SB_URL+'/rest/v1/'+table, row, {'Prefer':'return=minimal'}, function(s2, body2){
+      if(s2 >= 200 && s2 < 300){
+        finish(true);
+      }else{
+        console.error('[Supabase] Insert error:', s2, body2);
+        finish(false);
+      }
+    });
+  });
 }
 
 // ── Load from Supabase ──────────────────────────────────────
 function sbLoad(isProg, onDone){
   var table = isProg ? 'programas_data' : 'cursos_data';
-  var url   = SB_URL+'/rest/v1/'+table+'?id=eq.1&select=rows,meta';
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET', url);
-  Object.keys(SB_HDRS).forEach(function(k){xhr.setRequestHeader(k,SB_HDRS[k]);});
-  xhr.onload=function(){
-    if(xhr.status===200){
+  // Get the most recent row
+  var url = SB_URL+'/rest/v1/'+table+'?select=rows,meta&order=id.desc&limit=1';
+  sbRequest('GET', url, null, {}, function(status, body){
+    if(status === 200){
       try{
-        var data=JSON.parse(xhr.responseText);
-        if(!data||!data.length||!data[0].rows||!data[0].rows.length){onDone('no_data',null,{});return;}
-        var rows=data[0].rows.map(function(a){return expandRow(a,isProg);});
-        var meta=data[0].meta||{};
-        // Update local cache
-        try{localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs',JSON.stringify({rows:data[0].rows,meta:meta}));}catch(e){}
-        onDone(null,rows,meta);
-      }catch(e){onDone('parse error: '+e.message,null,{});}
-    }else if(xhr.status===404||xhr.status===406){
-      onDone('no_data',null,{});
+        var data = JSON.parse(body);
+        if(!data || !data.length || !data[0].rows || !data[0].rows.length){
+          onDone('no_data', null, {}); return;
+        }
+        var rows = data[0].rows.map(function(a){ return expandRow(a, isProg); });
+        var meta = data[0].meta || {};
+        try{ localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs', JSON.stringify({rows:data[0].rows,meta:meta})); }catch(e){}
+        onDone(null, rows, meta);
+      }catch(e){ onDone('parse error: '+e.message, null, {}); }
+    }else if(status === 406 || status === 404){
+      onDone('no_data', null, {});
     }else{
-      onDone('HTTP '+xhr.status,null,{});
+      console.error('[Supabase] Load error:', status, body);
+      onDone('HTTP '+status, null, {});
     }
-  };
-  xhr.onerror=function(){onDone('network error',null,{});};
-  xhr.send();
+  });
 }
 
 // ── Load from localStorage cache (instant offline fallback) ─
