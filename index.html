@@ -155,15 +155,7 @@ table.detail-table tr:hover{background:#FFF4EC}
       </div>
     </div>
     <div id="modalStorageInfo" style="margin-top:12px;background:#f8f8f8;border-radius:8px;padding:10px 14px;font-size:.76rem;color:#666;line-height:1.7"></div>
-    <div id="tokenSection" style="margin-top:12px;border-top:1px dashed #e5e5e5;padding-top:12px;display:none">
-      <div id="tokenStatus" style="margin-bottom:8px"></div>
-      <div style="font-size:.75rem;color:#aaa;margin-bottom:6px">Token de GitHub (solo necesario en esta computadora, una vez):</div>
-      <div style="display:flex;gap:8px">
-        <input id="tokenInput" type="password" placeholder="github_pat_..." style="flex:1;padding:7px 10px;border:1.5px solid #e5e5e5;border-radius:8px;font-size:.78rem;font-family:monospace;background:#fff;outline:none">
-        <button id="btnSaveToken" style="background:#AE90C3;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:.78rem;cursor:pointer;white-space:nowrap;font-weight:600">Guardar</button>
-        <button id="btnClearToken" style="background:#f5f5f5;border:1px solid #e0e0e0;padding:7px 10px;border-radius:8px;font-size:.78rem;cursor:pointer;color:#888">Borrar</button>
-      </div>
-    </div>
+
     <div style="display:flex;gap:10px;margin-top:12px">
       <button class="btn-load" id="btnLoadModal" style="display:block;flex:1;margin-top:0">Aplicar y actualizar</button>
       <button id="btnClearStorage" style="background:#f5f5f5;border:1px solid #e0e0e0;padding:10px 14px;border-radius:10px;font-size:.82rem;cursor:pointer;color:#888;white-space:nowrap">Limpiar cache</button>
@@ -320,231 +312,150 @@ var CF=null,CU=null,PS=50;
 var pendProg=null,pendCurs=null;
 
 // ============================================================
-// PERSISTENCE — GitHub shared storage
-// Global uploads data → saved as JSON in the repo → all users
-// read from raw.githubusercontent.com on login (no auth needed to read)
+// PERSISTENCE — Supabase shared storage
+// All users read/write from the same Supabase project.
+// Data is stored in two tables: programas_data and cursos_data.
+// Each table has one row (upserted on every upload).
 // ============================================================
-var GH_TOKEN  = '';  // loaded from localStorage on admin machine
-var GH_REPO   = 'daiana245-bit/Dashboard-Learning-Academy';
-var GH_BRANCH = 'main';
-var GH_TOKEN_KEY = 'xtc_gh_token';
+var SB_URL    = 'https://ppvlccnpmdlhztdzhwcb.supabase.co';
+var SB_KEY    = 'sb_publishable_BxbcHEnAalFCH8JXlHHaGQ_h0RXhwbt';
+var SB_HDRS   = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'};
 
-function getToken(){
-  if(GH_TOKEN) return GH_TOKEN;
-  try{ return localStorage.getItem(GH_TOKEN_KEY) || ''; }catch(e){ return ''; }
+// ── Compact rows to arrays (saves ~60% bandwidth) ──────────
+function compactRow(r,isProg){
+  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto,r.fechaContr,r.nombre,r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0];
+  return [r.curso,r.legajo,r.pais,r.segmento,r.depto,r.nombre,r.posicion,r.estado,r.progreso,r.fechaFin,r.distrito,r.region,r.calificacion,r.categoria];
 }
-function saveToken(t){
-  GH_TOKEN = t;
-  try{ localStorage.setItem(GH_TOKEN_KEY, t); }catch(e){}
-}
-function clearToken(){
-  GH_TOKEN = '';
-  try{ localStorage.removeItem(GH_TOKEN_KEY); }catch(e){}
-}
-var GH_FILE_PROG = 'data/programas.json';
-var GH_FILE_CURS = 'data/cursos.json';
-var GH_RAW_BASE  = 'https://raw.githubusercontent.com/' + GH_REPO + '/' + GH_BRANCH + '/';
-
-// ── Compact/expand rows (same as before, saves bandwidth) ──
-function compactRow(r, isProg){
-  if(isProg){
-    return [r.programa,r.legajo,r.pais,r.segmento,r.depto,
-            r.fechaContr,r.nombre,r.posicion,r.progreso,r.estado,
-            r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0];
-  }else{
-    return [r.curso,r.legajo,r.pais,r.segmento,r.depto,
-            r.nombre,r.posicion,r.estado,r.progreso,
-            r.fechaFin,r.distrito,r.region,r.calificacion,r.categoria];
-  }
-}
-function expandRow(a, isProg){
-  if(isProg){
-    var ts=a[12];
-    return {programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],
-            fechaContr:a[5],nombre:a[6],posicion:a[7],progreso:a[8],estado:a[9],
-            distrito:a[10],region:a[11],
-            fechaContrDate:ts?new Date(ts):null,primerAcceso:''};
-  }else{
-    return {curso:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],
-            nombre:a[5],posicion:a[6],estado:a[7],progreso:a[8],
-            fechaFin:a[9],distrito:a[10],region:a[11],
-            calificacion:a[12],categoria:a[13]};
-  }
+function expandRow(a,isProg){
+  if(isProg){var ts=a[12];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],fechaContr:a[5],nombre:a[6],posicion:a[7],progreso:a[8],estado:a[9],distrito:a[10],region:a[11],fechaContrDate:ts?new Date(ts):null,primerAcceso:''};}
+  return{curso:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],estado:a[7],progreso:a[8],fechaFin:a[9],distrito:a[10],region:a[11],calificacion:a[12],categoria:a[13]};
 }
 
-// ── Get current SHA of a file (needed for GitHub update API) ──
-function ghGetSHA(filePath, cb){
-  var url = 'https://api.github.com/repos/' + GH_REPO + '/contents/' + filePath + '?ref=' + GH_BRANCH;
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url);
-  xhr.setRequestHeader('Authorization', 'token ' + getToken());
-  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-  xhr.onload = function(){
-    if(xhr.status === 200){
-      try{ cb(null, JSON.parse(xhr.responseText).sha); }
-      catch(e){ cb(null, null); }
-    } else {
-      cb(null, null); // file doesn't exist yet
+// ── Save to Supabase (upsert row id=1) ──────────────────────
+function sbSave(isProg, allData, meta, onDone){
+  var table   = isProg ? 'programas_data' : 'cursos_data';
+  var compact = allData.map(function(r){return compactRow(r,isProg);});
+  var payload = JSON.stringify([{id:1, rows:compact, meta:meta, updated_at:new Date().toISOString()}]);
+  var url     = SB_URL+'/rest/v1/'+table+'?on_conflict=id';
+  var infoEl  = g(isProg?'dpLoadTime':'dcLoadTime');
+
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST', url);
+  Object.keys(SB_HDRS).forEach(function(k){xhr.setRequestHeader(k,SB_HDRS[k]);});
+  xhr.setRequestHeader('Prefer','resolution=merge-duplicates,return=minimal');
+  xhr.onload=function(){
+    if(xhr.status>=200&&xhr.status<300){
+      console.log('[Supabase] Saved '+(isProg?'Programas':'Cursos')+' OK ('+Math.round(JSON.stringify(compact).length/1024)+' KB)');
+      if(infoEl)infoEl.textContent=meta.loadTime+' \u2713 guardado en la nube';
+      // Cache locally for instant next load
+      try{localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs',JSON.stringify({rows:compact,meta:meta}));}catch(e){}
+      if(onDone)onDone(null);
+    }else{
+      console.error('[Supabase] Save error:',xhr.status,xhr.responseText);
+      if(infoEl)infoEl.textContent=meta.loadTime+' \u26a0 error al guardar';
+      if(onDone)onDone('HTTP '+xhr.status);
     }
   };
-  xhr.onerror = function(){ cb('network error', null); };
-  xhr.send();
+  xhr.onerror=function(){
+    console.error('[Supabase] Network error');
+    if(onDone)onDone('network error');
+  };
+  xhr.send(payload);
 }
 
-// ── Upload data to GitHub repo ──
-function ghSave(isProg, allData, meta, onDone){
-  if(!getToken()){
-    console.warn('[GitHub] No token — skipping save to cloud');
-    if(onDone) onDone('no_token');
-    return;
-  }
-  var filePath = isProg ? GH_FILE_PROG : GH_FILE_CURS;
-  var compact  = allData.map(function(r){ return compactRow(r, isProg); });
-  var payload  = JSON.stringify({v:2, rows:compact, meta:meta});
-  var b64      = btoa(unescape(encodeURIComponent(payload)));
-
-  // Show saving indicator
-  var infoEl = g(isProg ? 'dpLoadTime' : 'dcLoadTime');
-
-  ghGetSHA(filePath, function(err, sha){
-    var body = {
-      message: (isProg ? 'Programas' : 'Cursos') + ' actualizado ' + meta.loadTime,
-      content: b64,
-      branch:  GH_BRANCH
-    };
-    if(sha) body.sha = sha;
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('PUT', 'https://api.github.com/repos/' + GH_REPO + '/contents/' + filePath);
-    xhr.setRequestHeader('Authorization', 'token ' + getToken());
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-    xhr.onload = function(){
-      if(xhr.status === 200 || xhr.status === 201){
-        console.log('[GitHub] Saved ' + (isProg?'Programas':'Cursos') + ' OK (' + Math.round(payload.length/1024) + ' KB)');
-        if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado';
-        // Also save to localStorage as cache for faster next load
-        try{
-          localStorage.removeItem(isProg ? 'xtc_prog_v2' : 'xtc_curs_v2');
-          localStorage.setItem(isProg ? 'xtc_prog_v2' : 'xtc_curs_v2', payload);
-        }catch(e){}
-        if(onDone) onDone(null);
-      } else {
-        console.error('[GitHub] Save failed:', xhr.status, xhr.responseText);
-        if(infoEl) infoEl.textContent = meta.loadTime + ' ⚠ no guardado en nube';
-        if(onDone) onDone('HTTP ' + xhr.status);
-      }
-    };
-    xhr.onerror = function(){
-      console.error('[GitHub] Network error saving');
-      if(infoEl) infoEl.textContent = meta.loadTime + ' ⚠ sin conexion';
-      if(onDone) onDone('network error');
-    };
-    xhr.send(JSON.stringify(body));
-  });
-}
-
-// ── Load data from GitHub (raw URL, no auth needed) ──
-function ghLoad(isProg, onDone){
-  var filePath = isProg ? GH_FILE_PROG : GH_FILE_CURS;
-  // Add cache-busting to avoid stale CDN cache
-  var url = GH_RAW_BASE + filePath + '?_=' + Date.now();
-  var xhr = new XMLHttpRequest();
+// ── Load from Supabase ──────────────────────────────────────
+function sbLoad(isProg, onDone){
+  var table = isProg ? 'programas_data' : 'cursos_data';
+  var url   = SB_URL+'/rest/v1/'+table+'?id=eq.1&select=rows,meta';
+  var xhr=new XMLHttpRequest();
   xhr.open('GET', url);
-  xhr.onload = function(){
-    if(xhr.status === 200){
+  Object.keys(SB_HDRS).forEach(function(k){xhr.setRequestHeader(k,SB_HDRS[k]);});
+  xhr.onload=function(){
+    if(xhr.status===200){
       try{
-        var parsed = JSON.parse(xhr.responseText);
-        var rows = parsed.rows.map(function(a){ return expandRow(a, isProg); });
-        // Update localStorage cache
-        try{ localStorage.setItem(isProg ? 'xtc_prog_v2' : 'xtc_curs_v2', xhr.responseText); }catch(e){}
-        onDone(null, rows, parsed.meta || {});
-      }catch(e){
-        onDone('parse error: ' + e.message, null, {});
-      }
-    } else if(xhr.status === 404){
-      onDone('no_data', null, {});
-    } else {
-      onDone('HTTP ' + xhr.status, null, {});
+        var data=JSON.parse(xhr.responseText);
+        if(!data||!data.length||!data[0].rows||!data[0].rows.length){onDone('no_data',null,{});return;}
+        var rows=data[0].rows.map(function(a){return expandRow(a,isProg);});
+        var meta=data[0].meta||{};
+        // Update local cache
+        try{localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs',JSON.stringify({rows:data[0].rows,meta:meta}));}catch(e){}
+        onDone(null,rows,meta);
+      }catch(e){onDone('parse error: '+e.message,null,{});}
+    }else if(xhr.status===404||xhr.status===406){
+      onDone('no_data',null,{});
+    }else{
+      onDone('HTTP '+xhr.status,null,{});
     }
   };
-  xhr.onerror = function(){ onDone('network error', null, {}); };
+  xhr.onerror=function(){onDone('network error',null,{});};
   xhr.send();
 }
 
-// ── Load from localStorage cache (instant, offline fallback) ──
+// ── Load from localStorage cache (instant offline fallback) ─
 function lsCacheLoad(isProg){
   try{
-    var raw = localStorage.getItem(isProg ? 'xtc_prog_v2' : 'xtc_curs_v2');
-    if(!raw) return null;
-    var parsed = JSON.parse(raw);
-    if(!parsed || !parsed.rows) return null;
-    var rows = parsed.rows.map(function(a){ return expandRow(a, isProg); });
-    return { data: rows, meta: parsed.meta || {} };
-  }catch(e){ return null; }
+    var raw=localStorage.getItem(isProg?'xtc_sb_prog':'xtc_sb_curs');
+    if(!raw)return null;
+    var parsed=JSON.parse(raw);
+    if(!parsed||!parsed.rows)return null;
+    return{data:parsed.rows.map(function(a){return expandRow(a,isProg);}),meta:parsed.meta||{}};
+  }catch(e){return null;}
 }
 
-// ── Apply loaded data to state ──
+// ── Apply loaded data to state ──────────────────────────────
 function applyData(isProg, rows, meta){
-  var filtered = CF ? rows.filter(function(r){ return CF.indexOf(r.pais) >= 0; }) : rows;
-  var loadTime = (meta && meta.loadTime) ? meta.loadTime : '-';
-  var fileName = (meta && meta.fileName) ? meta.fileName : 'Datos guardados';
+  var filtered=CF?rows.filter(function(r){return CF.indexOf(r.pais)>=0;}):rows;
+  var loadTime=(meta&&meta.loadTime)?meta.loadTime:'-';
+  var fileName=(meta&&meta.fileName)?meta.fileName:'Datos guardados';
   if(isProg){
-    P.raw = filtered; P.fSel = {}; P.cfg.forEach(function(f){ P.fSel[f.id] = {}; });
-    g('dpFileName').textContent  = fileName;
-    g('dpRowCount').textContent  = filtered.length.toLocaleString();
-    g('dpLoadTime').textContent  = loadTime;
-    g('dibProg').style.display   = 'flex';
+    P.raw=filtered;P.fSel={};P.cfg.forEach(function(f){P.fSel[f.id]={};});
+    g('dpFileName').textContent=fileName;g('dpRowCount').textContent=filtered.length.toLocaleString();
+    g('dpLoadTime').textContent=loadTime;g('dibProg').style.display='flex';
   }else{
-    C.raw = filtered; C.fSel = {}; C.cfg.forEach(function(f){ C.fSel[f.id] = {}; });
-    g('dcFileName').textContent  = fileName;
-    g('dcRowCount').textContent  = filtered.length.toLocaleString();
-    g('dcLoadTime').textContent  = loadTime;
-    g('dibCurs').style.display   = 'flex';
+    C.raw=filtered;C.fSel={};C.cfg.forEach(function(f){C.fSel[f.id]={};});
+    g('dcFileName').textContent=fileName;g('dcRowCount').textContent=filtered.length.toLocaleString();
+    g('dcLoadTime').textContent=loadTime;g('dibCurs').style.display='flex';
   }
 }
 
-// ── Restore on login: try GitHub first, fall back to localStorage cache ──
+// ── Restore on login: cache first, then fresh from Supabase ─
 function restoreData(isProg, onDone){
-  // 1. Show cached data instantly while fetching from GitHub
-  var cached = lsCacheLoad(isProg);
-  if(cached && cached.data && cached.data.length){
-    applyData(isProg, cached.data, cached.meta);
-    if(isProg) refreshTabProg(); else refreshTabCurs();
+  // 1. Show cache instantly
+  var cached=lsCacheLoad(isProg);
+  if(cached&&cached.data&&cached.data.length){
+    applyData(isProg,cached.data,cached.meta);
+    if(isProg)refreshTabProg();else refreshTabCurs();
   }
-  // 2. Fetch latest from GitHub in background
-  ghLoad(isProg, function(err, rows, meta){
-    if(!err && rows && rows.length){
-      applyData(isProg, rows, meta);
-      if(isProg) refreshTabProg(); else refreshTabCurs();
-      console.log('[GitHub] Loaded fresh ' + (isProg?'Programas':'Cursos') + ': ' + rows.length + ' rows');
-    } else if(err === 'no_data'){
-      console.log('[GitHub] No data yet for ' + (isProg?'Programas':'Cursos'));
-    } else {
-      console.warn('[GitHub] Load error:', err, '— using cache');
+  // 2. Fetch fresh from Supabase in background
+  sbLoad(isProg,function(err,rows,meta){
+    if(!err&&rows&&rows.length){
+      applyData(isProg,rows,meta);
+      if(isProg)refreshTabProg();else refreshTabCurs();
+      console.log('[Supabase] Loaded fresh '+(isProg?'Programas':'Cursos')+': '+rows.length+' rows');
+    }else if(err==='no_data'){
+      if(!cached)console.log('[Supabase] No data yet for '+(isProg?'Programas':'Cursos'));
+    }else{
+      console.warn('[Supabase] Load error:',err,'— using cache');
     }
-    if(onDone) onDone();
+    if(onDone)onDone();
   });
 }
 
-// ── Clear stored data (global only) ──
+// ── Clear local cache ───────────────────────────────────────
 function clearAllStoredData(){
-  ['xtc_prog_v2','xtc_curs_v2'].forEach(function(k){
-    try{ localStorage.removeItem(k); }catch(e){}
+  ['xtc_sb_prog','xtc_sb_curs','xtc_prog_v2','xtc_curs_v2'].forEach(function(k){
+    try{localStorage.removeItem(k);}catch(e){}
   });
 }
 
-// ── Storage info for modal ──
+// ── Storage info for modal ──────────────────────────────────
 function getStorageInfo(){
-  var info = '';
-  var metaP = null, metaC = null;
-  var cP = lsCacheLoad(true), cC = lsCacheLoad(false);
-  if(cP && cP.meta) metaP = cP.meta;
-  if(cC && cC.meta) metaC = cC.meta;
-  if(metaP) info += 'Programas: ' + metaP.fileName + ' (' + metaP.loadTime + ')<br>';
-  else info += 'Programas: sin datos guardados<br>';
-  if(metaC) info += 'Cursos: ' + metaC.fileName + ' (' + metaC.loadTime + ')';
-  else info += 'Cursos: sin datos guardados';
+  var cP=lsCacheLoad(true),cC=lsCacheLoad(false);
+  var info='';
+  if(cP&&cP.meta&&cP.meta.fileName) info+='Programas: '+cP.meta.fileName+' ('+cP.meta.loadTime+')<br>';
+  else info+='Programas: sin datos guardados<br>';
+  if(cC&&cC.meta&&cC.meta.fileName) info+='Cursos: '+cC.meta.fileName+' ('+cC.meta.loadTime+')';
+  else info+='Cursos: sin datos guardados';
   return info;
 }
 
@@ -709,13 +620,7 @@ function openModal(){
   g('fiProg').value='';g('fiCurs').value='';
   // Show storage status
   g('modalStorageInfo').innerHTML = getStorageInfo();
-  // Show/hide token section
-  var tk = getToken();
-  g('tokenSection').style.display = 'block';
-  g('tokenStatus').innerHTML = tk
-    ? '<span style="color:#22a06b;font-size:.78rem">&#10003; Token configurado — datos se guardan en la nube</span>'
-    : '<span style="color:#E97132;font-size:.78rem">&#9888; Sin token — los datos no se comparten entre usuarios</span>';
-  g('tokenInput').value = '';
+
   g('uploadModal').style.display='flex';
 }
 function closeModal(){g('uploadModal').style.display='none';}
@@ -828,13 +733,13 @@ function readExcel(file,isProg,cb){
       }
       var filtered=CF?mapped.filter(function(r){return CF.indexOf(r.pais)>=0;}):mapped;
       var loadTime = new Date().toLocaleString('es-AR');
-      var meta = { fileName: file.name, loadTime: loadTime, rowCount: filtered.length };
-      // Apply to local state immediately so dashboard shows data right away
+      var meta = { fileName: file.name, loadTime: loadTime, rowCount: mapped.length };
+      // Apply to local state immediately
       applyData(isProg, mapped, meta);
-      // Save to GitHub (shared with all users) — async, doesn't block UI
+      // Save to Supabase (shared with all users) — async
       g('loadingText').textContent = 'Guardando en la nube...';
-      ghSave(isProg, mapped, meta, function(err){
-        if(err) console.warn('[GitHub] Save error:', err);
+      sbSave(isProg, mapped, meta, function(err){
+        if(err) console.warn('[Supabase] Save error:', err);
         cb();
       });
     }catch(err){
@@ -1528,11 +1433,8 @@ document.addEventListener('DOMContentLoaded',function(){
       localStorage.removeItem(k);
     });
   }catch(e){}
-  // Restore token for admin (loaded from localStorage if previously saved)
-  try{
-    var savedToken = localStorage.getItem(GH_TOKEN_KEY);
-    if(savedToken) GH_TOKEN = savedToken;
-  }catch(e){}
+  // Clear old GitHub token keys (no longer needed)
+  try{ localStorage.removeItem('xtc_gh_token'); }catch(e){}
   // Auth
   g('btnLogin').addEventListener('click',doLogin);
   g('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
@@ -1545,21 +1447,7 @@ document.addEventListener('DOMContentLoaded',function(){
   g('btnManageData').addEventListener('click',openModal);
   g('btnCloseModal').addEventListener('click',closeModal);
   g('btnLoadModal').addEventListener('click',applyUploads);
-  g('btnSaveToken').addEventListener('click',function(){
-    var t = g('tokenInput').value.trim();
-    if(!t){ alert('Pega el token primero.'); return; }
-    if(!t.startsWith('ghp_') && !t.startsWith('github_pat_')){ alert('El token debe empezar con ghp_ o github_pat_'); return; }
-    saveToken(t);
-    g('tokenStatus').innerHTML = '<span style="color:#22a06b;font-size:.78rem">&#10003; Token guardado — los datos se guardaran en la nube al subir archivos</span>';
-    g('tokenInput').value = '';
-    alert('Token guardado en esta computadora. La proxima vez que subas un archivo se guardara en la nube automaticamente.');
-  });
-  g('btnClearToken').addEventListener('click',function(){
-    if(confirm('Borrar el token de esta computadora?')){
-      clearToken();
-      g('tokenStatus').innerHTML = '<span style="color:#E97132;font-size:.78rem">&#9888; Token eliminado</span>';
-    }
-  });
+
   g('btnClearStorage').addEventListener('click',function(){
     if(confirm('Borrar cache local?\nLos datos en la nube NO se borran. La proxima vez que inicies sesion se vuelven a descargar.')){
       clearAllStoredData();
