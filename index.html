@@ -57,11 +57,16 @@ body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#333}
 .ms-tag{display:inline-flex;align-items:center;gap:5px;background:#FDE8DB;color:#A45F2B;padding:2px 7px;border-radius:12px;font-size:.72rem;max-width:100%}
 .ms-tag.purple{background:#EFE7F4;color:#7E63A0}
 .ms-tag button{border:none;background:none;color:inherit;font-size:.84rem;line-height:1;cursor:pointer}
-.ms-dropdown{position:absolute;z-index:70;left:0;right:0;top:calc(100% + 3px);background:#fff;border:1px solid #E6DDF0;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.08);display:none;max-height:220px;overflow:auto;padding:5px}
-.multi-select.open .ms-dropdown{display:block}
+.ms-dropdown{position:absolute;z-index:70;left:0;right:0;top:calc(100% + 3px);background:#fff;border:1px solid #E6DDF0;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.08);display:none;max-height:280px;overflow:hidden;padding:0;flex-direction:column}
+.multi-select.open .ms-dropdown{display:flex}
+.ms-search-box{padding:6px 8px;border-bottom:1px solid #f0e8f8;flex-shrink:0}
+.ms-search-box input{width:100%;padding:5px 8px;border:1px solid #e5e5e5;border-radius:6px;font-size:.78rem;outline:none}
+.ms-search-box input:focus{border-color:#E97132}
+.ms-options-list{overflow-y:auto;padding:4px;flex:1}
 .ms-option{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:6px;font-size:.8rem;cursor:pointer}
 .ms-option:hover{background:#F6F1FA}
 .ms-option input{width:14px;height:14px;accent-color:#AE90C3}
+.ms-no-results{padding:10px 8px;font-size:.78rem;color:#aaa;text-align:center}
 .toggle-more{background:none;border:none;color:#E97132;font-weight:600;font-size:.82rem;cursor:pointer;margin-top:10px;display:flex;align-items:center;gap:4px}
 .secondary-filters{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #e5e5e5}
 .secondary-filters.show{display:block}
@@ -842,14 +847,14 @@ function renderMS(state,id,triggerFn){
   var sel=Object.keys(state.fSel[id]||{});
   var opts=state.fOpts[id]||[];
   var isPurple=(id.charAt(0)==='c');
-  // Render selected tags
+
+  // Render selected tags in trigger
   if(!sel.length){
     trigger.innerHTML='<span class="ms-placeholder">'+cfg.ph+'</span>';
   }else{
     trigger.innerHTML=sel.map(function(v){
       return '<span class="ms-tag'+(isPurple?' purple':'')+'" title="'+esc(v)+'">'+esc(trunc(v,22))+'<button type="button" data-rmv="'+esc(v)+'">&times;</button></span>';
     }).join('');
-    // Remove tag buttons
     trigger.querySelectorAll('button[data-rmv]').forEach(function(btn){
       btn.addEventListener('click',function(e){
         e.stopPropagation();
@@ -859,23 +864,66 @@ function renderMS(state,id,triggerFn){
       });
     });
   }
-  // Render dropdown options
+
+  // Render dropdown with search box
   if(!opts.length){
-    dd.innerHTML='<div class="ms-option" style="opacity:.6;cursor:default">Sin opciones</div>';
+    dd.innerHTML='<div class="ms-options-list"><div class="ms-no-results">Sin opciones</div></div>';
     return;
   }
-  dd.innerHTML=opts.map(function(v){
-    var chk=state.fSel[id][v]?'checked':'';
-    return '<label class="ms-option"><input type="checkbox" value="'+esc(v)+'" '+chk+'><span title="'+esc(v)+'">'+esc(v)+'</span></label>';
-  }).join('');
-  dd.querySelectorAll('input[type="checkbox"]').forEach(function(ch){
-    ch.addEventListener('change',function(){
-      if(ch.checked)state.fSel[id][ch.value]=1;
-      else delete state.fSel[id][ch.value];
-      renderMS(state,id,triggerFn);
-      triggerFn();
+
+  // Keep existing search value if dropdown already open
+  var existingSearch = '';
+  var existingInput = dd.querySelector('.ms-search-box input');
+  if(existingInput) existingSearch = existingInput.value;
+
+  dd.innerHTML =
+    '<div class="ms-search-box"><input type="text" placeholder="Buscar..." value="'+esc(existingSearch)+'"></div>'+
+    '<div class="ms-options-list"></div>';
+
+  var searchInput = dd.querySelector('.ms-search-box input');
+  var optsList    = dd.querySelector('.ms-options-list');
+
+  function renderOpts(filter){
+    var filtered = filter
+      ? opts.filter(function(v){ return v.toLowerCase().indexOf(filter.toLowerCase()) >= 0; })
+      : opts;
+    if(!filtered.length){
+      optsList.innerHTML='<div class="ms-no-results">Sin resultados para "'+esc(filter)+'"</div>';
+      return;
+    }
+    optsList.innerHTML = filtered.map(function(v){
+      var chk = state.fSel[id][v] ? 'checked' : '';
+      return '<label class="ms-option"><input type="checkbox" value="'+esc(v)+'" '+chk+'><span title="'+esc(v)+'">'+esc(v)+'</span></label>';
+    }).join('');
+    optsList.querySelectorAll('input[type="checkbox"]').forEach(function(ch){
+      ch.addEventListener('change',function(){
+        if(ch.checked) state.fSel[id][ch.value]=1;
+        else delete state.fSel[id][ch.value];
+        var cur = searchInput.value;
+        renderMS(state,id,triggerFn);
+        // Restore search after re-render
+        var newInput = dd.querySelector('.ms-search-box input');
+        if(newInput){ newInput.value=cur; renderOpts(cur); }
+        triggerFn();
+      });
     });
+  }
+
+  renderOpts(existingSearch);
+
+  searchInput.addEventListener('input', function(e){
+    e.stopPropagation();
+    renderOpts(this.value);
   });
+  searchInput.addEventListener('click', function(e){ e.stopPropagation(); });
+  searchInput.addEventListener('keydown', function(e){ e.stopPropagation(); });
+
+  // Auto-focus search when dropdown opens
+  setTimeout(function(){
+    if(el.classList.contains('open') && searchInput){
+      searchInput.focus();
+    }
+  }, 50);
 }
 function setOpts(state,id,values,keep,triggerFn){
   var seen={},clean=[];
@@ -883,8 +931,7 @@ function setOpts(state,id,values,keep,triggerFn){
     var v=String(values[i]||'').trim();
     if(v&&v!=='-'&&!seen[v]){seen[v]=1;clean.push(v);}
   }
-  // Always add currently selected values to options so they remain visible
-  // even if cascade filters them out (user selection is never auto-removed)
+  // Always keep selected values visible even if cascade filters them out
   if(keep){
     for(var k in (state.fSel[id]||{})){
       if(!seen[k]){seen[k]=1;clean.push(k);}
@@ -892,11 +939,12 @@ function setOpts(state,id,values,keep,triggerFn){
   }
   clean.sort(function(a,b){return a.localeCompare(b,'es');});
   state.fOpts[id]=clean;
-  if(!keep){
-    state.fSel[id]={};
-  }
-  // With keep=true: selections are preserved as-is (never auto-removed)
-  renderMS(state,id,triggerFn||function(){});
+  if(!keep){ state.fSel[id]={}; }
+  // Store triggerFn on state if provided (user-init only, not during cascade)
+  if(triggerFn) state.triggers = state.triggers||{}; if(triggerFn) state.triggers[id]=triggerFn;
+  // Use stored triggerFn (set during pPopulate/cPopulate, persists through cascade)
+  var fn=(state.triggers&&state.triggers[id])||function(){};
+  renderMS(state,id,fn);
 }
 
 // ============================================================
@@ -955,7 +1003,7 @@ function pCascade(){
   });
 }
 var _pt=null;
-function pDoFilter(){clearTimeout(_pt);_pt=setTimeout(_pFilter,60);}
+function pDoFilter(){clearTimeout(_pt);_pt=setTimeout(_pFilter,120);}
 function _pFilter(){
   pCascade();
   P.filt=P.raw.filter(function(r){return pMatch(r,null);});
@@ -1014,7 +1062,7 @@ function cCascade(){
   });
 }
 var _ct=null;
-function cDoFilter(){clearTimeout(_ct);_ct=setTimeout(_cFilter,60);}
+function cDoFilter(){clearTimeout(_ct);_ct=setTimeout(_cFilter,120);}
 function _cFilter(){
   cCascade();
   C.filt=C.raw.filter(function(r){return cMatch(r,null);});
@@ -1102,7 +1150,18 @@ function pC4(){
   P.filt.forEach(function(r){if(r.programa)progsSet[r.programa]=1;if(r[xF])xSet[r[xF]]=1;});
   var pArr=Object.keys(progsSet).sort(function(a,b){return a.localeCompare(b,'es');});
   var xRaw=Object.keys(xSet);
-  if(!pArr.length||!xRaw.length){Plotly.purge('pC4');return;}
+  if(!pArr.length||!xRaw.length){
+    Plotly.purge('pC4');
+    g('pC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Sin datos suficientes para mostrar el mapa de calor.<br>Aplica filtros para reducir la seleccion.</div>';
+    return;
+  }
+  // Limit cells to avoid browser freeze: max 50 programs x 100 locations = 5000 cells
+  var MAX_CELLS = 5000;
+  if(pArr.length * xRaw.length > MAX_CELLS){
+    Plotly.purge('pC4');
+    g('pC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Demasiadas combinaciones para mostrar el mapa de calor (<b>'+pArr.length+' programas x '+xRaw.length+' ubicaciones</b>).<br><br>Tip: filtra por Pa\u00eds, Distrito o Programa para reducir la vista.</div>';
+    return;
+  }
 
   // Build z matrix (null for no data, 0 for no completions)
   var zRaw={};
@@ -1227,7 +1286,7 @@ function pTable(){
   var tp=Math.ceil(data.length/PS);if(P.page>tp)P.page=tp||1;
   var pd=data.slice((P.page-1)*PS,(P.page)*PS);
   g('pTCount').textContent=data.length.toLocaleString()+' registros';
-  document.querySelector('#pTable thead tr').innerHTML='<th>Programa</th><th>Pais</th><th>Nombre</th><th>Estado</th><th>Progreso</th><th>Dpto</th><th>Distrito</th><th>Region</th><th>Legajo</th><th>Posicion</th><th>F.Contratacion</th>';
+  document.querySelector('#pTable thead tr').innerHTML='<th>Programa</th><th>Pais</th><th>Nombre</th><th>Estado</th><th>Progreso</th><th>Segmento</th><th>Dpto</th><th>Distrito</th><th>Region</th><th>Legajo</th><th>Posicion</th><th>F.Contratacion</th>';
   var h='';
   pd.forEach(function(r){
     var ec=r.estado==='Completado'?'color:#A45F2B;background:#FDE8DB':'color:#6E4F90;background:#EFE7F4';
@@ -1236,7 +1295,7 @@ function pTable(){
     h+='<tr><td title="'+esc(r.programa)+'">'+esc(trunc(r.programa,28))+'</td><td>'+esc(r.pais)+'</td>';
     h+='<td style="white-space:nowrap;font-weight:500">'+esc(r.nombre)+'</td>';
     h+='<td><span style="padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:600;white-space:nowrap;'+ec+'">'+r.estado+'</span></td>';
-    h+='<td>'+pb+'</td><td title="'+esc(r.depto)+'">'+esc(trunc(r.depto,22))+'</td>';
+    h+='<td>'+pb+'</td><td>'+esc(r.segmento)+'</td><td title="'+esc(r.depto)+'">'+esc(trunc(r.depto,22))+'</td>';
     h+='<td>'+esc(r.distrito)+'</td><td>'+esc(r.region)+'</td><td>'+esc(r.legajo)+'</td>';
     h+='<td style="font-size:.72rem;max-width:140px" title="'+esc(r.posicion)+'">'+esc(trunc(r.posicion,24))+'</td>';
     h+='<td style="white-space:nowrap">'+r.fechaContr+'</td></tr>';
@@ -1248,9 +1307,9 @@ function pExport(){
   var s=g('pTSearch').value.trim().toLowerCase();
   var data=P.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.programa.toLowerCase().indexOf(s)>=0;});
-  var nl='\n',hdr=['Programa','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Contratacion'];
+  var nl='\n',hdr=['Programa','Pais','Nombre','Estado','Progreso (%)','Segmento','Departamento','Distrito','Region','Legajo','Posicion','Fecha Contratacion'];
   var csv=hdr.map(function(h){return '"'+h+'"';}).join(',')+nl;
-  data.forEach(function(r){csv+=[r.programa,r.pais,r.nombre,r.estado,r.progreso,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaContr].map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',')+nl;});
+  data.forEach(function(r){csv+=[r.programa,r.pais,r.nombre,r.estado,r.progreso,r.segmento,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaContr].map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',')+nl;});
   downloadCSV(csv,'programas_export.csv');
 }
 
@@ -1323,7 +1382,17 @@ function cC4(){
   C.filt.forEach(function(r){if(r.curso)cursosSet[r.curso]=1;if(r[xF])xSet[r[xF]]=1;});
   var cArr=Object.keys(cursosSet).sort(function(a,b){return a.localeCompare(b,'es');});
   var xRaw=Object.keys(xSet);
-  if(!cArr.length||!xRaw.length){Plotly.purge('cC4');return;}
+  if(!cArr.length||!xRaw.length){
+    Plotly.purge('cC4');
+    g('cC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Sin datos suficientes para mostrar el mapa de calor.<br>Aplica filtros para reducir la seleccion.</div>';
+    return;
+  }
+  var MAX_CELLS_C = 5000;
+  if(cArr.length * xRaw.length > MAX_CELLS_C){
+    Plotly.purge('cC4');
+    g('cC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Demasiadas combinaciones para el mapa de calor (<b>'+cArr.length+' cursos x '+xRaw.length+' ubicaciones</b>).<br><br>Tip: filtra por Pa\u00eds, Distrito o Curso para reducir la vista.</div>';
+    return;
+  }
 
   // Build z
   var zRaw={};
