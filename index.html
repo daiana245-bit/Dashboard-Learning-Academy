@@ -1013,11 +1013,7 @@ function setOpts(state,id,values,keep,triggerFn){
   clean.sort(function(a,b){return a.localeCompare(b,'es');});
   state.fOpts[id]=clean;
   if(!keep){ state.fSel[id]={}; }
-  // Store triggerFn on state if provided (user-init only, not during cascade)
-  if(triggerFn) state.triggers = state.triggers||{}; if(triggerFn) state.triggers[id]=triggerFn;
-  // Use stored triggerFn (set during pPopulate/cPopulate, persists through cascade)
-  var fn=(state.triggers&&state.triggers[id])||function(){};
-  renderMS(state,id,fn);
+  renderMS(state,id,triggerFn||function(){});
 }
 
 // ============================================================
@@ -1060,19 +1056,37 @@ function pPopulate(){
   setOpts(P,'pFEstado',  ['Completado','No completado'],false,pDoFilter);
 }
 function pCascade(){
+  // Step 1: Update fOpts for each filter silently (no renderMS calls)
   P.cfg.forEach(function(f){
     var id=f.id;
     var base=P.raw.filter(function(r){return pMatch(r,id);});
-    if(id==='pFEstado') setOpts(P,id,['Completado','No completado'],true,pDoFilter);
-    else if(id==='pFPrograma') setOpts(P,id,base.map(function(r){return r.programa;}),true,pDoFilter);
-    else if(id==='pFPais')     setOpts(P,id,base.map(function(r){return r.pais;}),true,pDoFilter);
-    else if(id==='pFDistrito') setOpts(P,id,base.map(function(r){return r.distrito;}),true,pDoFilter);
-    else if(id==='pFDepto')    setOpts(P,id,base.map(function(r){return r.depto;}),true,pDoFilter);
-    else if(id==='pFNombre')   setOpts(P,id,base.map(function(r){return r.nombre;}),true,pDoFilter);
-    else if(id==='pFRegion')   setOpts(P,id,base.map(function(r){return r.region;}),true,pDoFilter);
-    else if(id==='pFSegmento') setOpts(P,id,base.map(function(r){return r.segmento;}),true,pDoFilter);
-    else if(id==='pFPosicion') setOpts(P,id,base.map(function(r){return r.posicion;}),true,pDoFilter);
-    else if(id==='pFLegajo')   setOpts(P,id,base.map(function(r){return r.legajo;}),true,pDoFilter);
+    var vals;
+    if(id==='pFEstado')    vals=['Completado','No completado'];
+    else if(id==='pFPrograma') vals=base.map(function(r){return r.programa;});
+    else if(id==='pFPais')     vals=base.map(function(r){return r.pais;});
+    else if(id==='pFDistrito') vals=base.map(function(r){return r.distrito;});
+    else if(id==='pFDepto')    vals=base.map(function(r){return r.depto;});
+    else if(id==='pFNombre')   vals=base.map(function(r){return r.nombre;});
+    else if(id==='pFRegion')   vals=base.map(function(r){return r.region;});
+    else if(id==='pFSegmento') vals=base.map(function(r){return r.segmento;});
+    else if(id==='pFPosicion') vals=base.map(function(r){return r.posicion;});
+    else if(id==='pFLegajo')   vals=base.map(function(r){return r.legajo;});
+    else vals=[];
+    // Build clean options list
+    var seen={},clean=[];
+    for(var i=0;i<vals.length;i++){
+      var v=String(vals[i]||'').trim();
+      if(v&&v!=='-'&&!seen[v]){seen[v]=1;clean.push(v);}
+    }
+    // Always keep selected values visible
+    for(var k in (P.fSel[id]||{})){if(!seen[k]){seen[k]=1;clean.push(k);}}
+    clean.sort(function(a,b){return a.localeCompare(b,'es');});
+    P.fOpts[id]=clean;
+    // fSel is NEVER modified here — only user interactions change fSel
+  });
+  // Step 2: Re-render all dropdowns ONCE with updated options
+  P.cfg.forEach(function(f){
+    renderMS(P, f.id, pDoFilter);
   });
 }
 var _pt=null;
@@ -1123,17 +1137,30 @@ function cCascade(){
   C.cfg.forEach(function(f){
     var id=f.id;
     var base=C.raw.filter(function(r){return cMatch(r,id);});
-    if(id==='cFEstado')    setOpts(C,id,['Completado','No completado'],true,cDoFilter);
-    else if(id==='cFCurso')    setOpts(C,id,base.map(function(r){return r.curso;}),true,cDoFilter);
-    else if(id==='cFPais')     setOpts(C,id,base.map(function(r){return r.pais;}),true,cDoFilter);
-    else if(id==='cFDistrito') setOpts(C,id,base.map(function(r){return r.distrito;}),true,cDoFilter);
-    else if(id==='cFDepto')    setOpts(C,id,base.map(function(r){return r.depto;}),true,cDoFilter);
-    else if(id==='cFNombre')   setOpts(C,id,base.map(function(r){return r.nombre;}),true,cDoFilter);
-    else if(id==='cFRegion')   setOpts(C,id,base.map(function(r){return r.region;}),true,cDoFilter);
-    else if(id==='cFSegmento') setOpts(C,id,base.map(function(r){return r.segmento;}),true,cDoFilter);
-    else if(id==='cFPosicion') setOpts(C,id,base.map(function(r){return r.posicion;}),true,cDoFilter);
-    else if(id==='cFLegajo')   setOpts(C,id,base.map(function(r){return r.legajo;}),true,cDoFilter);
-    else if(id==='cFCategoria')setOpts(C,id,base.map(function(r){return r.categoria;}),true,cDoFilter);
+    var vals;
+    if(id==='cFEstado')    vals=['Completado','No completado'];
+    else if(id==='cFCurso')    vals=base.map(function(r){return r.curso;});
+    else if(id==='cFPais')     vals=base.map(function(r){return r.pais;});
+    else if(id==='cFDistrito') vals=base.map(function(r){return r.distrito;});
+    else if(id==='cFDepto')    vals=base.map(function(r){return r.depto;});
+    else if(id==='cFNombre')   vals=base.map(function(r){return r.nombre;});
+    else if(id==='cFRegion')   vals=base.map(function(r){return r.region;});
+    else if(id==='cFSegmento') vals=base.map(function(r){return r.segmento;});
+    else if(id==='cFPosicion') vals=base.map(function(r){return r.posicion;});
+    else if(id==='cFLegajo')   vals=base.map(function(r){return r.legajo;});
+    else if(id==='cFCategoria')vals=base.map(function(r){return r.categoria;});
+    else vals=[];
+    var seen={},clean=[];
+    for(var i=0;i<vals.length;i++){
+      var v=String(vals[i]||'').trim();
+      if(v&&v!=='-'&&!seen[v]){seen[v]=1;clean.push(v);}
+    }
+    for(var k in (C.fSel[id]||{})){if(!seen[k]){seen[k]=1;clean.push(k);}}
+    clean.sort(function(a,b){return a.localeCompare(b,'es');});
+    C.fOpts[id]=clean;
+  });
+  C.cfg.forEach(function(f){
+    renderMS(C, f.id, cDoFilter);
   });
 }
 var _ct=null;
