@@ -87,11 +87,15 @@ body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#333}
 .bench-value{font-size:.95rem;font-weight:700;color:#7E63A0}
 .bench-compare{font-size:.66rem;margin-top:1px}
 .bench-up{color:#22a06b}.bench-down{color:#d9652c}.bench-neutral{color:#888}
-.chart-container{background:#fff;margin:0 14px 14px;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.staff-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#FEF0E7;border-radius:8px;margin:0 14px 10px;font-size:.78rem;color:#A45F2B;font-weight:600;cursor:pointer;user-select:none;border:1px solid #F2C860}
+.staff-toggle input{width:15px;height:15px;accent-color:#E97132;cursor:pointer}
+.staff-toggle-label{flex:1}
+.staff-badge{background:#E97132;color:#fff;font-size:.65rem;padding:2px 6px;border-radius:10px;margin-left:4px}
+.chart-container{background:#fff;margin:0 14px 14px;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04);min-width:0;overflow:hidden}
 .chart-title{font-size:.9rem;font-weight:700;margin-bottom:8px;color:#444;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
 .chart-subtitle{font-size:.7rem;color:#aaa;font-weight:400}
-.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;margin:0 14px 14px}
-.charts-row .chart-container{margin:0}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;margin:0 14px 14px;min-width:0}
+.charts-row .chart-container{margin:0;min-width:0;overflow:hidden}
 .table-section{background:#fff;margin:14px;border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
 .table-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .table-search{padding:7px 12px;border:1.5px solid #e5e5e5;border-radius:8px;font-size:.82rem;width:260px;outline:none}
@@ -115,7 +119,12 @@ table.detail-table tr:hover{background:#FFF4EC}
 .pagination button.active{background:#E97132;color:#fff;border-color:#E97132}
 .pagination button:disabled{opacity:.4;cursor:default}
 .page-info{font-size:.78rem;color:#888}
+table.detail-table th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+table.detail-table th.sortable:hover{background:#ece9f7;color:#7E63A0}
+table.detail-table th.sort-asc::after{content:' \25B2';font-size:.6rem;color:#E97132}
+table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E97132}
 @media(max-width:900px){.kpi-area{flex-direction:column}.benchmark-panel{width:100%}.charts-row{grid-template-columns:1fr}}
+@media(max-width:600px){.chart-container{padding:12px 8px}.kpi-row{grid-template-columns:1fr 1fr}.table-controls{flex-direction:column}.table-search{width:100%}}
 @media(max-width:768px){.filter-grid{grid-template-columns:1fr 1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.login-card{width:95%;padding:24px 18px}}
 </style>
 </head>
@@ -214,6 +223,11 @@ table.detail-table tr:hover{background:#FFF4EC}
             <div class="filter-group"><label>F.Contratacion Hasta</label><input type="date" id="pFHasta"></div>
           </div>
         </div>
+      </div>
+      <div class="staff-toggle" id="staffToggleBar" onclick="toggleStaff()">
+        <input type="checkbox" id="staffToggleChk" checked>
+        <span class="staff-toggle-label">Incluir STAFF en los calculos</span>
+        <span class="staff-badge" id="staffBadge">activo</span>
       </div>
       <div class="kpi-area">
         <div class="kpi-main"><div class="kpi-row">
@@ -314,7 +328,66 @@ table.detail-table tr:hover{background:#FFF4EC}
 var LOGINS={global:{pass:'global2024',cf:null},argentina:{pass:'argentina123',cf:['ARGENTINA']},chile:{pass:'chile123',cf:['CHILE']},mexico:{pass:'mexico123',cf:['MEXICO']},peru:{pass:'peru123',cf:['PERU']}};
 var BASE={orange:'#E97132',purple:'#AE90C3',yellow:'#F5F378'};
 var CF=null,CU=null,PS=50;
+var P_SORT={col:null,dir:0}; // col=field name, dir=0 none,1 asc,-1 desc
+var C_SORT={col:null,dir:0};
 var pendProg=null,pendCurs=null;
+var EXCLUDE_STAFF=false; // toggle state
+
+// ── Sort helpers ────────────────────────────────────────────
+function sortData(data, col, dir){
+  if(!col||dir===0) return data;
+  return data.slice().sort(function(a,b){
+    var av=a[col],bv=b[col];
+    // Numeric fields
+    if(col==='progreso'){ av=Number(av)||0; bv=Number(bv)||0; return dir*(av-bv); }
+    // Date fields
+    if(col==='fechaContrDate'){
+      av=av?av.getTime():0; bv=bv?bv.getTime():0; return dir*(av-bv);
+    }
+    // String fields
+    av=String(av||'').toLowerCase(); bv=String(bv||'').toLowerCase();
+    return dir*av.localeCompare(bv,'es');
+  });
+}
+function mkSortHeader(label, col, sortState, renderFn){
+  var cls='sortable';
+  if(sortState.col===col) cls+=sortState.dir===1?' sort-asc':' sort-desc';
+  return '<th class="'+cls+'" data-col="'+col+'">'+label+'</th>';
+}
+function handleSort(th, sortState, renderFn){
+  var col=th.getAttribute('data-col');
+  if(!col) return;
+  if(sortState.col===col){
+    sortState.dir=sortState.dir===1?-1:sortState.dir===-1?0:1;
+    if(sortState.dir===0) sortState.col=null;
+  }else{
+    sortState.col=col; sortState.dir=1;
+  }
+  renderFn();
+}
+
+function toggleStaff(){
+  EXCLUDE_STAFF=!EXCLUDE_STAFF;
+  var chk=g('staffToggleChk');
+  var badge=g('staffBadge');
+  var bar=g('staffToggleBar');
+  if(chk) chk.checked=!EXCLUDE_STAFF;
+  if(badge) badge.textContent=EXCLUDE_STAFF?'excluido':'activo';
+  if(bar) bar.style.background=EXCLUDE_STAFF?'#EFE7F4':'#FEF0E7';
+  if(bar) bar.style.borderColor=EXCLUDE_STAFF?'#D4B8E8':'#F2C860';
+  if(bar) bar.style.color=EXCLUDE_STAFF?'#7E63A0':'#A45F2B';
+  if(badge) badge.style.background=EXCLUDE_STAFF?'#AE90C3':'#E97132';
+  pDoFilter();
+}
+
+// Filter data respecting STAFF toggle
+function applyStaffFilter(data){
+  if(!EXCLUDE_STAFF) return data;
+  return data.filter(function(r){
+    var seg=(r.segmento||'').toUpperCase();
+    return seg!=='STAFF' && seg!=='STAFF RETAIL';
+  });
+}
 
 // ============================================================
 // PERSISTENCE — Supabase shared storage
@@ -1006,8 +1079,10 @@ var _pt=null;
 function pDoFilter(){clearTimeout(_pt);_pt=setTimeout(_pFilter,120);}
 function _pFilter(){
   pCascade();
-  P.filt=P.raw.filter(function(r){return pMatch(r,null);});
-  P.page=1;pBadge();pKPIs();pBench();pCharts();pTable();
+  var matched=P.raw.filter(function(r){return pMatch(r,null);});
+  P.filt=applyStaffFilter(matched);
+  P.page=1;P_SORT={col:null,dir:0};
+  pBadge();pKPIs();pBench();pCharts();pTable();
 }
 function pClear(){P.cfg.forEach(function(f){P.fSel[f.id]={};});var fd=g('pFDesde'),fh=g('pFHasta');if(fd)fd.value='';if(fh)fh.value='';pPopulate();pDoFilter();}
 
@@ -1066,7 +1141,8 @@ function cDoFilter(){clearTimeout(_ct);_ct=setTimeout(_cFilter,120);}
 function _cFilter(){
   cCascade();
   C.filt=C.raw.filter(function(r){return cMatch(r,null);});
-  C.page=1;cBadge();cKPIs();cBench();cCharts();cTable();
+  C.page=1;C_SORT={col:null,dir:0};
+  cBadge();cKPIs();cBench();cCharts();cTable();
 }
 function cClear(){C.cfg.forEach(function(f){C.fSel[f.id]={};});cPopulate();cDoFilter();}
 
@@ -1112,10 +1188,13 @@ function pC1(){
   var labels=Object.keys(grp).sort(function(a,b){return a.localeCompare(b,'es');});
   if(!labels.length){Plotly.purge('pC1');return;}
   g('pC1').style.height=aH(labels.length,280,36,600)+'px';
+  var totals=labels.map(function(l){return grp[l].c+grp[l].nc;});
+  var maxY=Math.max.apply(null,totals);
   Plotly.newPlot('pC1',[
     {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].c;}),marker:{color:blend(BASE.orange,'#ffffff',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
-    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].nc;}),marker:{color:blend(BASE.purple,'#000000',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'}
-  ],{barmode:'stack',margin:{t:20,b:labels.length>5?150:110,l:55,r:15},xaxis:{tickangle:labels.length>5?-40:-15,automargin:true},yaxis:{title:'Cantidad'},legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
+    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].nc;}),marker:{color:blend(BASE.purple,'#000000',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
+    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,28);}),y:totals.map(function(){return 0;}),text:totals.map(function(t){return t;}),textposition:'outside',textfont:{size:10,color:'#666'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
+  ],{barmode:'stack',margin:{t:30,b:labels.length>5?150:110,l:55,r:15},xaxis:{tickangle:labels.length>5?-40:-15,automargin:true},yaxis:{title:'Cantidad',range:[0,maxY*1.18]},legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
 }
 function pC2(){
   var sD=pGetSel('pFDistrito'),gf=sD.length===1?'depto':'distrito';
@@ -1155,12 +1234,28 @@ function pC4(){
     g('pC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Sin datos suficientes para mostrar el mapa de calor.<br>Aplica filtros para reducir la seleccion.</div>';
     return;
   }
-  // Limit cells to avoid browser freeze: max 50 programs x 100 locations = 5000 cells
-  var MAX_CELLS = 5000;
+  // Limit cells: more generous when 1 program selected, auto-reduce X axis before blocking
+  var singleProg = pGetSel('pFPrograma').length === 1;
+  var MAX_CELLS = singleProg ? 12000 : 5000;
   if(pArr.length * xRaw.length > MAX_CELLS){
-    Plotly.purge('pC4');
-    g('pC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Demasiadas combinaciones para mostrar el mapa de calor (<b>'+pArr.length+' programas x '+xRaw.length+' ubicaciones</b>).<br><br>Tip: filtra por Pa\u00eds, Distrito o Programa para reducir la vista.</div>';
-    return;
+    // Auto-reduce: take top 80 X values by avg completeness
+    if(xRaw.length > 80){
+      var xAvgPre={};
+      xRaw.forEach(function(x){
+        var vals=[];
+        pArr.forEach(function(p){
+          var s2=P.filt.filter(function(r){return r.programa===p&&r[xF]===x;});
+          if(s2.length) vals.push(Math.round(s2.filter(function(r){return r.estado==='Completado';}).length/s2.length*100));
+        });
+        xAvgPre[x]=vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:-1;
+      });
+      xRaw=xRaw.slice().sort(function(a,b){return xAvgPre[b]-xAvgPre[a];}).slice(0,80);
+    }
+    if(pArr.length * xRaw.length > MAX_CELLS){
+      Plotly.purge('pC4');
+      g('pC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Demasiadas combinaciones para mostrar el mapa de calor.<br><br>Aplica filtros de País o Distrito para reducir la vista.</div>';
+      return;
+    }
   }
 
   // Build z matrix (null for no data, 0 for no completions)
@@ -1283,10 +1378,28 @@ function pTable(){
   var s=g('pTSearch').value.trim().toLowerCase();
   var data=P.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.programa.toLowerCase().indexOf(s)>=0||r.depto.toLowerCase().indexOf(s)>=0||r.distrito.toLowerCase().indexOf(s)>=0;});
+  data=sortData(data,P_SORT.col,P_SORT.dir);
   var tp=Math.ceil(data.length/PS);if(P.page>tp)P.page=tp||1;
   var pd=data.slice((P.page-1)*PS,(P.page)*PS);
   g('pTCount').textContent=data.length.toLocaleString()+' registros';
-  document.querySelector('#pTable thead tr').innerHTML='<th>Programa</th><th>Pais</th><th>Nombre</th><th>Estado</th><th>Progreso</th><th>Segmento</th><th>Dpto</th><th>Distrito</th><th>Region</th><th>Legajo</th><th>Posicion</th><th>F.Contratacion</th>';
+  var ss=P_SORT;
+  document.querySelector('#pTable thead tr').innerHTML=
+    mkSortHeader('Programa','programa',ss,pTable)+
+    mkSortHeader('Pais','pais',ss,pTable)+
+    mkSortHeader('Nombre','nombre',ss,pTable)+
+    mkSortHeader('Estado','estado',ss,pTable)+
+    mkSortHeader('Progreso','progreso',ss,pTable)+
+    mkSortHeader('Segmento','segmento',ss,pTable)+
+    mkSortHeader('Dpto','depto',ss,pTable)+
+    mkSortHeader('Distrito','distrito',ss,pTable)+
+    mkSortHeader('Region','region',ss,pTable)+
+    mkSortHeader('Legajo','legajo',ss,pTable)+
+    mkSortHeader('Posicion','posicion',ss,pTable)+
+    mkSortHeader('F.Contratacion','fechaContrDate',ss,pTable);
+  // Attach sort click listeners
+  document.querySelectorAll('#pTable thead th.sortable').forEach(function(th){
+    th.addEventListener('click',function(){ handleSort(th,P_SORT,pTable); });
+  });
   var h='';
   pd.forEach(function(r){
     var ec=r.estado==='Completado'?'color:#A45F2B;background:#FDE8DB':'color:#6E4F90;background:#EFE7F4';
@@ -1343,10 +1456,13 @@ function cC1(){
   g('cCS1').textContent='(Top '+items.length+' por volumen)';
   var labels=items.map(function(i){return i.k;});
   g('cC1').style.height=aH(labels.length,300,38,680)+'px';
+  var ctotals=items.map(function(i){return i.t;});
+  var cmaxY=Math.max.apply(null,ctotals);
   Plotly.newPlot('cC1',[
     {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.c;}),marker:{color:blend(BASE.purple,'#ffffff',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
-    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.nc;}),marker:{color:blend(BASE.orange,'#000000',0.08)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'}
-  ],{barmode:'stack',margin:{t:20,b:labels.length>6?170:130,l:55,r:15},xaxis:{tickangle:labels.length>6?-45:-20,automargin:true},yaxis:{title:'Cantidad'},legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
+    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.nc;}),marker:{color:blend(BASE.orange,'#000000',0.08)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
+    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,35);}),y:ctotals.map(function(){return 0;}),text:ctotals,textposition:'outside',textfont:{size:10,color:'#666'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
+  ],{barmode:'stack',margin:{t:30,b:labels.length>6?170:130,l:55,r:15},xaxis:{tickangle:labels.length>6?-45:-20,automargin:true},yaxis:{title:'Cantidad',range:[0,cmaxY*1.18]},legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
 }
 function cC2(){
   var sP=cGetSel('cFPais'),sD=cGetSel('cFDistrito');
@@ -1387,11 +1503,26 @@ function cC4(){
     g('cC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Sin datos suficientes para mostrar el mapa de calor.<br>Aplica filtros para reducir la seleccion.</div>';
     return;
   }
-  var MAX_CELLS_C = 5000;
+  var singleCurs = cGetSel('cFCurso').length === 1;
+  var MAX_CELLS_C = singleCurs ? 12000 : 5000;
   if(cArr.length * xRaw.length > MAX_CELLS_C){
-    Plotly.purge('cC4');
-    g('cC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Demasiadas combinaciones para el mapa de calor (<b>'+cArr.length+' cursos x '+xRaw.length+' ubicaciones</b>).<br><br>Tip: filtra por Pa\u00eds, Distrito o Curso para reducir la vista.</div>';
-    return;
+    if(xRaw.length > 80){
+      var xAvgPreC={};
+      xRaw.forEach(function(x){
+        var vals=[];
+        cArr.forEach(function(c){
+          var s2=C.filt.filter(function(r){return r.curso===c&&r[xF]===x;});
+          if(s2.length) vals.push(Math.round(s2.filter(function(r){return r.estado==='Completado';}).length/s2.length*100));
+        });
+        xAvgPreC[x]=vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:-1;
+      });
+      xRaw=xRaw.slice().sort(function(a,b){return xAvgPreC[b]-xAvgPreC[a];}).slice(0,80);
+    }
+    if(cArr.length * xRaw.length > MAX_CELLS_C){
+      Plotly.purge('cC4');
+      g('cC4').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:.85rem;text-align:center;padding:20px">Demasiadas combinaciones para el mapa de calor.<br><br>Aplica filtros de País o Distrito para reducir la vista.</div>';
+      return;
+    }
   }
 
   // Build z
@@ -1457,10 +1588,26 @@ function cTable(){
   var s=g('cTSearch').value.trim().toLowerCase();
   var data=C.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.curso.toLowerCase().indexOf(s)>=0||r.pais.toLowerCase().indexOf(s)>=0;});
+  data=sortData(data,C_SORT.col,C_SORT.dir);
   var tp=Math.ceil(data.length/PS);if(C.page>tp)C.page=tp||1;
   var pd=data.slice((C.page-1)*PS,(C.page)*PS);
   g('cTCount').textContent=data.length.toLocaleString()+' registros';
-  document.querySelector('#cTable thead tr').innerHTML='<th>Curso</th><th>Pais</th><th>Nombre</th><th>Estado</th><th>Progreso</th><th>Dpto</th><th>Distrito</th><th>Legajo</th><th>Posicion</th><th>F.Finalizacion</th><th>Categoria</th>';
+  var ss=C_SORT;
+  document.querySelector('#cTable thead tr').innerHTML=
+    mkSortHeader('Curso','curso',ss,cTable)+
+    mkSortHeader('Pais','pais',ss,cTable)+
+    mkSortHeader('Nombre','nombre',ss,cTable)+
+    mkSortHeader('Estado','estado',ss,cTable)+
+    mkSortHeader('Progreso','progreso',ss,cTable)+
+    mkSortHeader('Dpto','depto',ss,cTable)+
+    mkSortHeader('Distrito','distrito',ss,cTable)+
+    mkSortHeader('Legajo','legajo',ss,cTable)+
+    mkSortHeader('Posicion','posicion',ss,cTable)+
+    mkSortHeader('F.Finalizacion','fechaFin',ss,cTable)+
+    mkSortHeader('Categoria','categoria',ss,cTable);
+  document.querySelectorAll('#cTable thead th.sortable').forEach(function(th){
+    th.addEventListener('click',function(){ handleSort(th,C_SORT,cTable); });
+  });
   var h='';
   pd.forEach(function(r){
     var ec=r.estado==='Completado'?'color:#7E63A0;background:#EFE7F4':'color:#A45F2B;background:#FDE8DB';
