@@ -168,6 +168,18 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         <div class="upload-info" id="uiCurs"><strong id="uiCursName"></strong><span id="uiCursSize" style="color:#aaa"></span></div>
       </div>
     </div>
+    <!-- Talent Mapping Upload -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px dashed #e5e5e5">
+      <div style="font-size:.82rem;font-weight:600;color:#22a06b;margin-bottom:8px">🎯 Talent Mapping</div>
+      <div class="upload-zone" id="uzTalent" style="border-color:#22a06b22;background:#f0faf5">
+        <div style="font-size:.82rem;color:#22a06b">Arrastrá el archivo de Talent Mapping aquí</div>
+        <div style="font-size:.72rem;color:#aaa;margin-top:4px">Excel o CSV con columnas: LEGAJO, MATCH CULTURAL, POTENCIAL DE DESARROLLO</div>
+        <input type="file" id="fiTalent" accept=".xlsx,.xls,.csv" style="display:none">
+      </div>
+      <div id="uiTalent" style="display:none;margin-top:6px;font-size:.78rem;color:#22a06b">
+        ✓ <span id="uiTalentName"></span><span id="uiTalentSize" style="color:#aaa"></span>
+      </div>
+    </div>
     <div id="modalStorageInfo" style="margin-top:12px;background:#f8f8f8;border-radius:8px;padding:10px 14px;font-size:.76rem;color:#666;line-height:1.7"></div>
 
     <div style="display:flex;gap:10px;margin-top:12px">
@@ -193,6 +205,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
   <div class="tab-nav">
     <button class="tab-btn active-prog" id="tabBtnProg">Programas</button>
     <button class="tab-btn" id="tabBtnCurs">Cursos</button>
+    <button class="tab-btn" id="tabBtnTalent">Talent Mapping</button>
   </div>
   <!-- TAB PROGRAMAS -->
   <div class="tab-content active" id="tabProg">
@@ -231,8 +244,8 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       </div>
       <div class="kpi-area">
         <div class="kpi-main"><div class="kpi-row">
-          <div class="kpi-card"><div class="kpi-value" id="pKpiTotal">0</div><div class="kpi-label">Total Registros</div><div class="kpi-filter-badge" id="pB1">filtrado</div></div>
-          <div class="kpi-card c2"><div class="kpi-value" id="pKpiUsers">0</div><div class="kpi-label">Colaboradores Unicos</div><div class="kpi-filter-badge" id="pB2">filtrado</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="pKpiUsers">0</div><div class="kpi-label">Colaboradores Únicos</div><div class="kpi-filter-badge" id="pB1">filtrado</div></div>
+          <div class="kpi-card kpi-primary"><div class="kpi-value" id="pKpiCompleted100">0</div><div class="kpi-label">Colaboradores 100% Completado</div><div class="kpi-filter-badge" id="pB2">filtrado</div></div>
           <div class="kpi-card c3"><div class="kpi-value" id="pKpiCompleted">0%</div><div class="kpi-label">Tasa Completitud</div><div class="kpi-filter-badge" id="pB3">filtrado</div></div>
           <div class="kpi-card c4"><div class="kpi-value" id="pKpiAvg">0%</div><div class="kpi-label">Progreso Promedio</div><div class="kpi-filter-badge" id="pB4">filtrado</div></div>
           <div class="kpi-card c5"><div class="kpi-value" id="pKpiProgs">0</div><div class="kpi-label">Programas</div></div>
@@ -320,7 +333,42 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       </div>
     </div>
   </div>
-</div>
+
+<!-- TAB TALENT MAPPING -->
+<div class="tab-content" id="tabTalent">
+  <div id="tNoData" style="text-align:center;padding:60px 20px;color:#aaa">
+    <div style="font-size:2rem;margin-bottom:12px">🎯</div>
+    <div style="font-weight:600;margin-bottom:8px">Sin datos de Talent Mapping</div>
+    <div style="font-size:.85rem">Subí el archivo desde <b>Gestionar datos</b> para comenzar.</div>
+  </div>
+  <div id="tMain" style="display:none">
+    <div class="talent-kpi-row">
+      <div class="talent-kpi"><div class="kpi-value" id="tKpiTotal">0</div><div class="kpi-label">Talentos Alto Potencial</div></div>
+      <div class="talent-kpi"><div class="kpi-value" id="tKpiOnboarding">0%</div><div class="kpi-label">% con Onboarding Completo</div></div>
+      <div class="talent-kpi"><div class="kpi-value" id="tKpiAvgProg">0%</div><div class="kpi-label">Progreso Promedio</div></div>
+      <div class="talent-kpi"><div class="kpi-value" id="tKpiPending">0</div><div class="kpi-label">Sin datos en Programas</div></div>
+    </div>
+    <div class="table-section" style="margin:0 14px 14px">
+      <div class="table-controls" style="margin-bottom:12px">
+        <span style="font-weight:700;font-size:.95rem;color:#444">🎯 Talentos Alto Potencial</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="tSearch" class="table-search" placeholder="Buscar..." oninput="renderTalentTable()">
+          <button class="btn-export" onclick="exportTalent()" style="background:#22a06b">⬇ Exportar</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;max-height:600px;overflow-y:auto">
+        <table class="detail-table" id="tTable">
+          <thead><tr>
+            <th>Legajo</th><th>Nombre</th><th>Posición</th><th>Match Cultural</th>
+            <th>% Avance General</th><th>Estado Programas</th><th>Programas Pendientes</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="tPag"></div>
+    </div>
+  </div>
+</div></div>
 <script>
 // ============================================================
 // GLOBALS
@@ -686,6 +734,7 @@ function enterDash(){
   // Restore data: show cache instantly, fetch fresh from GitHub in background
   if(!P.raw.length) restoreData(true, null);
   if(!C.raw.length) restoreData(false, null);
+  restoreTalent();
   initAllMS();
   refreshTabProg();
   refreshTabCurs();
@@ -695,10 +744,31 @@ function enterDash(){
 // ============================================================
 // TABS
 // ============================================================
-function showTabProg(){g('tabProg').classList.add('active');g('tabCurs').classList.remove('active');g('tabBtnProg').className='tab-btn active-prog';g('tabBtnCurs').className='tab-btn';}
-function showTabCurs(){g('tabCurs').classList.add('active');g('tabProg').classList.remove('active');g('tabBtnCurs').className='tab-btn active-curs';g('tabBtnProg').className='tab-btn';}
-function refreshTabProg(){if(P.raw.length>0){g('pNoData').style.display='none';g('pMain').style.display='block';pPopulate();pDoFilter();}else{g('pNoData').style.display='block';g('pMain').style.display='none';}}
-function refreshTabCurs(){if(C.raw.length>0){g('cNoData').style.display='none';g('cMain').style.display='block';cPopulate();cDoFilter();}else{g('cNoData').style.display='block';g('cMain').style.display='none';}}
+function showTabProg(){g('tabProg').classList.add('active');g('tabCurs').classList.remove('active');g('tabTalent').classList.remove('active');g('tabBtnProg').className='tab-btn active-prog';g('tabBtnCurs').className='tab-btn';g('tabBtnTalent').className='tab-btn';}
+function showTabCurs(){g('tabCurs').classList.add('active');g('tabProg').classList.remove('active');g('tabTalent').classList.remove('active');g('tabBtnCurs').className='tab-btn active-curs';g('tabBtnProg').className='tab-btn';g('tabBtnTalent').className='tab-btn';}
+function showTabTalent(){g('tabTalent').classList.add('active');g('tabProg').classList.remove('active');g('tabCurs').classList.remove('active');g('tabBtnTalent').className='tab-btn active-talent';g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';}
+function refreshTabProg(){
+  if(P.raw.length>0){
+    g('pNoData').style.display='none';g('pMain').style.display='block';
+    if(pHasFilters()){
+      // User has active filters — preserve them, just re-filter with new data
+      pDoFilter();
+    }else{
+      // No filters active — safe to repopulate dropdowns
+      pPopulate();pDoFilter();
+    }
+  }else{g('pNoData').style.display='block';g('pMain').style.display='none';}
+}
+function refreshTabCurs(){
+  if(C.raw.length>0){
+    g('cNoData').style.display='none';g('cMain').style.display='block';
+    if(cHasFilters()){
+      cDoFilter();
+    }else{
+      cPopulate();cDoFilter();
+    }
+  }else{g('cNoData').style.display='block';g('cMain').style.display='none';}
+}
 
 // ============================================================
 // UPLOAD
@@ -727,8 +797,16 @@ function setUpFile(file,isProg){
   if(isProg){pendProg=file;g('uiProgName').textContent=file.name;g('uiProgSize').textContent=' - '+sz;g('uiProg').style.display='block';}
   else{pendCurs=file;g('uiCursName').textContent=file.name;g('uiCursSize').textContent=' - '+sz;g('uiCurs').style.display='block';}
 }
+var pendTalent=null;
+function setTalentFile(file){
+  if(!file.name.match(/\.(xlsx|xls|csv)$/i)){alert('Selecciona un archivo Excel o CSV');return;}
+  pendTalent=file;
+  g('uiTalentName').textContent=file.name;
+  g('uiTalentSize').textContent=' - '+(file.size/1024).toFixed(1)+' KB';
+  g('uiTalent').style.display='block';
+}
 function applyUploads(){
-  if(!pendProg&&!pendCurs){alert('Selecciona al menos un archivo.');return;}
+  if(!pendProg&&!pendCurs&&!pendTalent){alert('Selecciona al menos un archivo.');return;}
   closeModal();
   g('loadingOverlay').style.display='flex';
   g('loadingText').textContent='Procesando archivos...';
@@ -738,7 +816,22 @@ function applyUploads(){
   processQueue(queue,0);
 }
 function processQueue(queue,idx){
-  if(idx>=queue.length){g('loadingOverlay').style.display='none';refreshTabProg();refreshTabCurs();return;}
+  if(idx>=queue.length){
+    g('loadingOverlay').style.display='none';
+    refreshTabProg();refreshTabCurs();
+    // Process talent if pending
+    if(pendTalent){
+      var tf=pendTalent; pendTalent=null;
+      g('loadingOverlay').style.display='flex';
+      g('loadingText').textContent='Procesando Talent Mapping...';
+      readExcelRaw(tf, function(rows){
+        g('loadingOverlay').style.display='none';
+        processTalentData(rows);
+        showTabTalent();
+      });
+    }
+    return;
+  }
   setTimeout(function(){readExcel(queue[idx].file,queue[idx].isProg,function(){processQueue(queue,idx+1);});},50);
 }
 // ── CSV parser (no dependencies, handles quoted fields + \n inside cells) ──
@@ -794,6 +887,27 @@ function parseCSVtext(text){
 }
 
 // ── Main file reader: handles .xlsx, .xls AND .csv ─────────────
+function readExcelRaw(file, cb){
+  var isCSV=file.name.toLowerCase().endsWith('.csv');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var rows;
+      if(isCSV){
+        var text=e.target.result;
+        if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+        rows=parseCSVtext(text);
+      }else{
+        var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true,cellNF:false,cellText:false});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'dd/mm/yyyy'});
+      }
+      cb(rows);
+    }catch(err){ g('loadingOverlay').style.display='none'; alert('Error leyendo archivo: '+err.message); cb([]); }
+  };
+  reader.onerror=function(){g('loadingOverlay').style.display='none';alert('Error leyendo el archivo.');cb([]);};
+  isCSV?reader.readAsText(file,'UTF-8'):reader.readAsArrayBuffer(file);
+}
 function readExcel(file,isProg,cb){
   var isCSV=file.name.toLowerCase().endsWith('.csv');
   var reader=new FileReader();
@@ -1188,9 +1302,18 @@ function calcK(data,keyFn){
 function pBadge(){var n=pCountFilters(),el=g('pFilterCount');if(n>0){el.textContent=n+' filtro'+(n>1?'s':'')+' activo'+(n>1?'s':'');el.style.display='inline';}else el.style.display='none';}
 function pKPIs(){
   var k=calcK(P.filt,function(r){return r.programa;});
-  g('pKpiTotal').textContent=k.n.toLocaleString();g('pKpiUsers').textContent=k.u.toLocaleString();
-  g('pKpiCompleted').textContent=k.cPct+'%';g('pKpiAvg').textContent=k.avg+'%';g('pKpiProgs').textContent=k.keys;
+  // Count unique legajos with estado=Completado
+  var done={};P.filt.forEach(function(r){if(r.estado==='Completado')done[r.legajo]=1;});
+  var comp100=Object.keys(done).length;
+  g('pKpiUsers').textContent=k.u.toLocaleString();
+  g('pKpiCompleted100').textContent=comp100.toLocaleString();
+  g('pKpiCompleted').textContent=k.cPct+'%';
+  g('pKpiAvg').textContent=k.avg+'%';
+  g('pKpiProgs').textContent=k.keys;
   var a=pHasFilters();['pB1','pB2','pB3','pB4'].forEach(function(id){g(id).style.display=a?'inline-block':'none';});
+  // Update record note
+  var note=g('pRecordNote');
+  if(note) note.textContent='Información basada en un histórico de '+P.raw.length.toLocaleString()+' registros'+(a?' (mostrando '+P.filt.length.toLocaleString()+' filtrados).'+'':' totales.');
 }
 function pBench(){
   var gk=calcK(P.raw,function(r){return r.programa;}),fk=calcK(P.filt),a=pHasFilters();
@@ -1217,11 +1340,23 @@ function pC1(){
   g('pC1').style.height=aH(labels.length,280,36,600)+'px';
   var totals=labels.map(function(l){return grp[l].c+grp[l].nc;});
   var maxY=Math.max.apply(null,totals);
+  // Labels inside bars: show value if bar is tall enough
+  var lblC=labels.map(function(l){return grp[l].c>0?grp[l].c:'';});
+  var lblNC=labels.map(function(l){return grp[l].nc>0?grp[l].nc:'';});
   Plotly.newPlot('pC1',[
-    {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].c;}),marker:{color:blend(BASE.orange,'#ffffff',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
-    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].nc;}),marker:{color:blend(BASE.purple,'#000000',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
-    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,28);}),y:totals.map(function(){return 0;}),text:totals.map(function(t){return t;}),textposition:'outside',textfont:{size:10,color:'#666'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
-  ],{barmode:'stack',margin:{t:30,b:labels.length>5?150:110,l:55,r:15},xaxis:{tickangle:labels.length>5?-40:-15,automargin:true},yaxis:{title:'Cantidad',range:[0,maxY*1.18]},legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
+    {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].c;}),
+     marker:{color:'#AE90C3'},text:lblC,textposition:'inside',textfont:{size:10,color:'#fff'},insidetextanchor:'middle',
+     customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
+    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,28);}),y:labels.map(function(l){return grp[l].nc;}),
+     marker:{color:'#E97132'},text:lblNC,textposition:'inside',textfont:{size:10,color:'#fff'},insidetextanchor:'middle',
+     customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
+    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,28);}),y:totals.map(function(){return 0;}),
+     text:totals,textposition:'outside',textfont:{size:10,color:'#555'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
+  ],{barmode:'stack',margin:{t:30,b:labels.length>5?150:110,l:55,r:15},
+     xaxis:{tickangle:labels.length>5?-40:-15,automargin:true},
+     yaxis:{title:'Cantidad',range:[0,maxY*1.22]},
+     legend:{orientation:'h',y:1.08,x:0},
+     font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
 }
 function pC2(){
   var sD=pGetSel('pFDistrito'),gf=sD.length===1?'depto':'distrito';
@@ -1231,7 +1366,7 @@ function pC2(){
   if(!items.length){Plotly.purge('pC2');return;}
   var labels=items.map(function(i){return i.l;}),vals=items.map(function(i){return i.v;});
   g('pC2').style.height=aH(labels.length,260,32,650)+'px';
-  var cols=vals.map(function(v){return v>=80?blend(BASE.orange,'#000000',0.15):v>=50?BASE.orange:blend(BASE.purple,'#000000',0.15);});
+  var cols=vals.map(function(v){return v>=70?'#AE90C3':v>=50?'#F5A874':'#E97132';});
   Plotly.newPlot('pC2',[{type:'bar',x:labels.map(function(l){return trunc(l,28);}),y:vals,marker:{color:cols},text:vals.map(function(v){return v+'%';}),textposition:'outside',customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Progreso: %{y}%<extra></extra>'}],
     {margin:{t:20,b:labels.length>6?160:130,l:55,r:15},yaxis:{title:'% Progreso',range:[0,Math.max.apply(null,vals.concat([100]))*1.18]},xaxis:{tickangle:labels.length>6?-45:-20,automargin:true},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
 }
@@ -1485,11 +1620,22 @@ function cC1(){
   g('cC1').style.height=aH(labels.length,300,38,680)+'px';
   var ctotals=items.map(function(i){return i.t;});
   var cmaxY=Math.max.apply(null,ctotals);
+  var clblC=items.map(function(i){return i.c>0?i.c:'';});
+  var clblNC=items.map(function(i){return i.nc>0?i.nc:'';});
   Plotly.newPlot('cC1',[
-    {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.c;}),marker:{color:blend(BASE.purple,'#ffffff',0.1)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
-    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.nc;}),marker:{color:blend(BASE.orange,'#000000',0.08)},customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
-    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,35);}),y:ctotals.map(function(){return 0;}),text:ctotals,textposition:'outside',textfont:{size:10,color:'#666'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
-  ],{barmode:'stack',margin:{t:30,b:labels.length>6?170:130,l:55,r:15},xaxis:{tickangle:labels.length>6?-45:-20,automargin:true},yaxis:{title:'Cantidad',range:[0,cmaxY*1.18]},legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
+    {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.c;}),
+     marker:{color:'#AE90C3'},text:clblC,textposition:'inside',textfont:{size:10,color:'#fff'},insidetextanchor:'middle',
+     customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
+    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.nc;}),
+     marker:{color:'#E97132'},text:clblNC,textposition:'inside',textfont:{size:10,color:'#fff'},insidetextanchor:'middle',
+     customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
+    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,35);}),y:ctotals.map(function(){return 0;}),
+     text:ctotals,textposition:'outside',textfont:{size:10,color:'#555'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
+  ],{barmode:'stack',margin:{t:30,b:labels.length>6?170:130,l:55,r:15},
+     xaxis:{tickangle:labels.length>6?-45:-20,automargin:true},
+     yaxis:{title:'Cantidad',range:[0,cmaxY*1.22]},
+     legend:{orientation:'h',y:1.08,x:0},
+     font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
 }
 function cC2(){
   var sP=cGetSel('cFPais'),sD=cGetSel('cFDistrito');
@@ -1680,6 +1826,151 @@ function mkPag(divId,state,tp,renderFn){
 // ============================================================
 // WIRE EVENTS
 // ============================================================
+// ============================================================
+// TALENT MAPPING STATE & LOGIC
+// ============================================================
+var T = { raw:[], joined:[], page:1 };
+var T_PS = 50;
+
+function mapTalentRow(headers, row){
+  var map={};
+  for(var i=0;i<headers.length;i++) map[headers[i].toString().trim().toLowerCase().replace(/[^a-z0-9]/g,'')]=String(row[i]||'').trim();
+  return {
+    legajo:     map['legajo']||map['nrodocumento']||map['id']||'',
+    matchCult:  map['matchcultural']||map['match']||map['matchcultura']||'',
+    potencial:  map['potencialdedesarrollo']||map['potencial']||''
+  };
+}
+
+function processTalentData(rows){
+  if(!rows||rows.length<2){ alert('El archivo de Talent Mapping no tiene datos suficientes.'); return; }
+  var headers = rows[0].map(function(h){ return String(h||'').trim(); });
+  var mapped = [];
+  for(var i=1;i<rows.length;i++){
+    var r = mapTalentRow(headers, rows[i]);
+    if(r.legajo) mapped.push(r);
+  }
+  // Filter: only POTENCIAL DE DESARROLLO == SI
+  var highPot = mapped.filter(function(r){ return r.potencial.toUpperCase()==='SI'; });
+  if(!highPot.length){ alert('No se encontraron registros con Potencial de Desarrollo = SI.'); return; }
+
+  // Join with P.raw by legajo
+  var progByLegajo = {};
+  P.raw.forEach(function(r){
+    if(!progByLegajo[r.legajo]) progByLegajo[r.legajo] = { nombre:r.nombre, posicion:r.posicion, programas:[], progTotal:0, progCount:0, completados:0 };
+    progByLegajo[r.legajo].programas.push(r.programa);
+    progByLegajo[r.legajo].progTotal += r.progreso;
+    progByLegajo[r.legajo].progCount++;
+    if(r.estado==='Completado') progByLegajo[r.legajo].completados++;
+  });
+
+  T.joined = highPot.map(function(t){
+    var p = progByLegajo[t.legajo];
+    var avgProg = p ? Math.round(p.progTotal/p.progCount) : null;
+    var progSet = p ? [...new Set(p.programas)] : [];
+    var pendientes = p ? progSet.filter(function(pr){
+      // A program is pending if not all entries for this legajo+program are completado
+      var entries = P.raw.filter(function(r){ return r.legajo===t.legajo && r.programa===pr; });
+      return entries.some(function(r){ return r.estado!=='Completado'; });
+    }) : [];
+    return {
+      legajo:    t.legajo,
+      nombre:    p ? p.nombre : '(sin datos en programas)',
+      posicion:  p ? p.posicion : '',
+      matchCult: t.matchCult,
+      avgProg:   avgProg,
+      programas: progSet,
+      pendientes:pendientes,
+      hasData:   !!p
+    };
+  });
+
+  T.raw = highPot;
+  T.page = 1;
+
+  // Save to Supabase
+  var meta = { loadTime: new Date().toLocaleString('es-AR'), rowCount: T.joined.length };
+  try{ localStorage.setItem('xtc_talent', JSON.stringify({joined:T.joined, raw:T.raw, meta:meta})); }catch(e){}
+
+  refreshTabTalent();
+}
+
+function refreshTabTalent(){
+  if(!T.joined.length){ g('tNoData').style.display='block'; g('tMain').style.display='none'; return; }
+  g('tNoData').style.display='none'; g('tMain').style.display='block';
+  // KPIs
+  var total = T.joined.length;
+  var withData = T.joined.filter(function(r){ return r.hasData; });
+  var onboarding = T.joined.filter(function(r){ return r.avgProg===100; }).length;
+  var avgProg = withData.length ? Math.round(withData.reduce(function(s,r){ return s+(r.avgProg||0); },0)/withData.length) : 0;
+  var noData = T.joined.filter(function(r){ return !r.hasData; }).length;
+  g('tKpiTotal').textContent = total.toLocaleString();
+  g('tKpiOnboarding').textContent = total ? Math.round(onboarding/total*100)+'%' : '0%';
+  g('tKpiAvgProg').textContent = avgProg+'%';
+  g('tKpiPending').textContent = noData.toLocaleString();
+  renderTalentTable();
+}
+
+function renderTalentTable(){
+  var s = (g('tSearch').value||'').trim().toLowerCase();
+  var data = T.joined;
+  if(s) data = data.filter(function(r){
+    return r.nombre.toLowerCase().indexOf(s)>=0 || r.legajo.toLowerCase().indexOf(s)>=0;
+  });
+  var tp = Math.ceil(data.length/T_PS); if(T.page>tp) T.page=tp||1;
+  var pd = data.slice((T.page-1)*T_PS, T.page*T_PS);
+  var h='';
+  pd.forEach(function(r){
+    var mc = r.matchCult.toUpperCase();
+    var mcClass = mc==='ALTO'?'talent-match-high':mc==='MEDIO'?'talent-match-mid':'talent-match-low';
+    var prog = r.avgProg!==null ? '<div style="display:flex;align-items:center;gap:5px"><div style="width:60px;height:7px;background:#eee;border-radius:3px;overflow:hidden"><div style="width:'+r.avgProg+'%;height:100%;background:'+(r.avgProg>=70?'#22a06b':r.avgProg>=50?'#F5A874':'#E97132')+';border-radius:3px"></div></div><span style="font-size:.75rem">'+r.avgProg+'%</span></div>' : '<span style="color:#ccc;font-size:.75rem">sin datos</span>';
+    var pend = r.pendientes.length ? r.pendientes.map(function(p){ return '<span style="background:#fde8db;color:#a45f2b;padding:2px 6px;border-radius:4px;font-size:.68rem;margin:1px 2px;display:inline-block">'+esc(trunc(p,25))+'</span>'; }).join('') : '<span style="color:#22a06b;font-size:.75rem">✓ Sin pendientes</span>';
+    var estadoPrograms = !r.hasData ? '<span style="color:#ccc;font-size:.75rem">Sin registro</span>' : r.pendientes.length===0 ? '<span class="talent-badge">Completo</span>' : '<span style="background:#fde8db;color:#a45f2b;padding:2px 8px;border-radius:5px;font-size:.7rem;font-weight:600">'+r.pendientes.length+' pendiente(s)</span>';
+    h+='<tr>';
+    h+='<td>'+esc(r.legajo)+'</td>';
+    h+='<td style="font-weight:500;white-space:nowrap">'+esc(r.nombre)+'</td>';
+    h+='<td style="font-size:.75rem;max-width:140px" title="'+esc(r.posicion)+'">'+esc(trunc(r.posicion,24))+'</td>';
+    h+='<td><span class="'+mcClass+'">'+esc(r.matchCult||'-')+'</span></td>';
+    h+='<td>'+prog+'</td>';
+    h+='<td>'+estadoPrograms+'</td>';
+    h+='<td style="max-width:200px">'+pend+'</td>';
+    h+='</tr>';
+  });
+  document.querySelector('#tTable tbody').innerHTML = h;
+  // Count
+  var cnt = g('tSearch') && g('tSearch').value ? data.length+' de '+T.joined.length+' talentos' : T.joined.length+' talentos';
+  // Pagination
+  var div=g('tPag'); if(!div)return;
+  if(tp<=1){div.innerHTML='';return;}
+  var ph='<button '+(T.page<=1?'disabled':'')+' onclick="T.page--;renderTalentTable()">← Ant</button>';
+  var s2=Math.max(1,T.page-3),e2=Math.min(tp,s2+6);
+  for(var i=s2;i<=e2;i++) ph+='<button class="'+(i===T.page?'active':'')+'" onclick="T.page='+i+';renderTalentTable()">'+i+'</button>';
+  ph+='<button '+(T.page>=tp?'disabled':'')+' onclick="T.page++;renderTalentTable()">Sig →</button>';
+  div.innerHTML=ph;
+}
+
+function exportTalent(){
+  var data = T.joined;
+  var nl='\n', hdr=['Legajo','Nombre','Posicion','Match Cultural','% Avance General','Estado Programas','Programas Pendientes'];
+  var csv=hdr.map(function(h){return '"'+h+'"';}).join(',')+nl;
+  data.forEach(function(r){
+    var estado = !r.hasData?'Sin registro':r.pendientes.length===0?'Completo':r.pendientes.length+' pendiente(s)';
+    csv+=[r.legajo,r.nombre,r.posicion,r.matchCult,r.avgProg!==null?r.avgProg+'%':'sin datos',estado,r.pendientes.join(' | ')]
+      .map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',')+nl;
+  });
+  downloadCSV(csv,'talent_mapping_export.csv');
+}
+
+// ── Restore talent from localStorage ──
+function restoreTalent(){
+  try{
+    var raw=localStorage.getItem('xtc_talent');
+    if(!raw)return;
+    var parsed=JSON.parse(raw);
+    if(parsed&&parsed.joined&&parsed.joined.length){ T.joined=parsed.joined; T.raw=parsed.raw||[]; refreshTabTalent(); }
+  }catch(e){}
+}
+
 document.addEventListener('DOMContentLoaded',function(){
   // Clear any old localStorage keys from previous versions
   try{
@@ -1697,6 +1988,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // Tabs
   g('tabBtnProg').addEventListener('click',showTabProg);
   g('tabBtnCurs').addEventListener('click',showTabCurs);
+  g('tabBtnTalent').addEventListener('click',showTabTalent);
   // Modal
   g('btnManageData').addEventListener('click',openModal);
   g('btnCloseModal').addEventListener('click',closeModal);
@@ -1713,6 +2005,19 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   setupUZ('uzProg','fiProg',true);
   setupUZ('uzCurs','fiCurs',false);
+  // Talent upload
+  (function(){
+    var z=g('uzTalent'), inp=g('fiTalent');
+    if(!z||!inp)return;
+    z.addEventListener('click',function(){inp.click();});
+    z.addEventListener('dragover',function(e){e.preventDefault();z.classList.add('dragover');});
+    z.addEventListener('dragleave',function(){z.classList.remove('dragover');});
+    z.addEventListener('drop',function(e){
+      e.preventDefault();z.classList.remove('dragover');
+      var f=e.dataTransfer.files[0];if(f)setTalentFile(f);
+    });
+    inp.addEventListener('change',function(e){if(e.target.files[0])setTalentFile(e.target.files[0]);});
+  })();
   // Prog
   g('pBtnClear').addEventListener('click',pClear);
   g('pBtnMore').addEventListener('click',function(){var sf=g('pSecFilters');sf.classList.toggle('show');g('pMoreIcon').innerHTML=sf.classList.contains('show')?'&#9650;':'&#9660;';});
