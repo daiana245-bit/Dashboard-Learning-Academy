@@ -545,11 +545,14 @@ function applyData(isProg, rows, meta){
   var loadTime=(meta&&meta.loadTime)?meta.loadTime:'-';
   var fileName=(meta&&meta.fileName)?meta.fileName:'Datos guardados';
   if(isProg){
-    P.raw=filtered;P.fSel={};P.cfg.forEach(function(f){P.fSel[f.id]={};});
+    P.raw=filtered;
+    // Only reset fSel if no active filters — preserve user selections on background reload
+    if(!pHasFilters()){ P.fSel={}; P.cfg.forEach(function(f){P.fSel[f.id]={};}); }
     g('dpFileName').textContent=fileName;g('dpRowCount').textContent=filtered.length.toLocaleString();
     g('dpLoadTime').textContent=loadTime;g('dibProg').style.display='flex';
   }else{
-    C.raw=filtered;C.fSel={};C.cfg.forEach(function(f){C.fSel[f.id]={};});
+    C.raw=filtered;
+    if(!cHasFilters()){ C.fSel={}; C.cfg.forEach(function(f){C.fSel[f.id]={};}); }
     g('dcFileName').textContent=fileName;g('dcRowCount').textContent=filtered.length.toLocaleString();
     g('dcLoadTime').textContent=loadTime;g('dibCurs').style.display='flex';
   }
