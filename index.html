@@ -79,7 +79,7 @@ body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#333}
 .kpi-value{font-size:1.7rem;font-weight:800;color:#333}
 .kpi-label{font-size:.7rem;color:#999;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
 .kpi-filter-badge{font-size:.62rem;color:#E97132;font-weight:600;margin-top:3px;background:#FEF0E7;padding:2px 5px;border-radius:7px;display:none}
-.benchmark-panel{width:210px;flex-shrink:0;background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-top:3px solid #AE90C3}
+
 .bench-title{font-size:.7rem;font-weight:700;color:#9D7FBA;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
 .bench-item{margin-bottom:9px;padding-bottom:9px;border-bottom:1px dashed #f0e8f8}
 .bench-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
@@ -123,7 +123,7 @@ table.detail-table th.sortable{cursor:pointer;user-select:none;white-space:nowra
 table.detail-table th.sortable:hover{background:#ece9f7;color:#7E63A0}
 table.detail-table th.sort-asc::after{content:' \25B2';font-size:.6rem;color:#E97132}
 table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E97132}
-@media(max-width:900px){.kpi-area{flex-direction:column}.benchmark-panel{width:100%}.charts-row{grid-template-columns:1fr}}
+@media(max-width:900px){.kpi-area{flex-direction:column}.charts-row{grid-template-columns:1fr}}
 @media(max-width:600px){.chart-container{padding:12px 8px}.kpi-row{grid-template-columns:1fr 1fr}.table-controls{flex-direction:column}.table-search{width:100%}}
 @media(max-width:768px){.filter-grid{grid-template-columns:1fr 1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.login-card{width:95%;padding:24px 18px}}
 </style>
@@ -253,13 +253,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
           <div class="kpi-card c4"><div class="kpi-value" id="pKpiAvg">0%</div><div class="kpi-label">Progreso Promedio</div><div class="kpi-filter-badge" id="pB4">filtrado</div></div>
           <div class="kpi-card c5"><div class="kpi-value" id="pKpiProgs">0</div><div class="kpi-label">Programas</div></div>
         </div></div>
-        <div class="benchmark-panel">
-          <div class="bench-title" id="pBenchTitle">Benchmark Global</div>
-          <div class="bench-item"><div class="bench-label">Colaboradores</div><div class="bench-value" id="pBUsers">-</div></div>
-          <div class="bench-item"><div class="bench-label">Completitud Global</div><div class="bench-value" id="pBComp">-</div><div class="bench-compare" id="pBCompC"></div></div>
-          <div class="bench-item"><div class="bench-label">Progreso Promedio</div><div class="bench-value" id="pBAvg">-</div><div class="bench-compare" id="pBCompA"></div></div>
-          <div class="bench-item" id="pBCB" style="display:none"><div class="bench-label" id="pBCBL">-</div><div class="bench-value" id="pBCBV">-</div></div>
-        </div>
+        
       </div>
       <div class="chart-container"><div class="chart-title">Estado del Programa <span class="chart-subtitle" id="pCS1">por Pais</span></div><div id="pC1" style="height:320px"></div></div>
       <div class="chart-container"><div class="chart-title">Cumplimiento <span class="chart-subtitle" id="pCS2">por Distrito</span></div><div id="pC2" style="height:320px"></div></div>
@@ -320,13 +314,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
           <div class="kpi-card c4"><div class="kpi-value" id="cKpiCursos">0</div><div class="kpi-label">Cursos Unicos</div></div>
           <div class="kpi-card c5"><div class="kpi-value" id="cKpiAvgProg">0%</div><div class="kpi-label">Progreso Promedio</div></div>
         </div></div>
-        <div class="benchmark-panel" style="border-top-color:#AE90C3">
-          <div class="bench-title" id="cBenchTitle" style="color:#AE90C3">Benchmark Global</div>
-          <div class="bench-item"><div class="bench-label">Colaboradores</div><div class="bench-value" id="cBUsers">-</div></div>
-          <div class="bench-item"><div class="bench-label">Completitud Global</div><div class="bench-value" id="cBComp">-</div><div class="bench-compare" id="cBCompC"></div></div>
-          <div class="bench-item"><div class="bench-label">Cursos/Usuario</div><div class="bench-value" id="cBAvg">-</div></div>
-          <div class="bench-item" id="cBCB" style="display:none"><div class="bench-label" id="cBCBL">-</div><div class="bench-value" id="cBCBV">-</div></div>
-        </div>
+        
       </div>
       <div class="chart-container"><div class="chart-title">Estado por Curso <span class="chart-subtitle" id="cCS1">(Top 20 por volumen)</span></div><div id="cC1" style="height:360px"></div></div>
       <div class="charts-row">
@@ -347,10 +335,10 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
 
 <!-- TAB TALENT MAPPING -->
 <div class="tab-content" id="tabTalent">
-  <div id="tNoData" style="text-align:center;padding:60px 20px;color:#aaa">
-    <div style="font-size:2rem;margin-bottom:12px">🎯</div>
-    <div style="font-weight:600;margin-bottom:8px">Sin datos de Talent Mapping</div>
-    <div style="font-size:.85rem">Subí el archivo desde <b>Gestionar datos</b> para comenzar.</div>
+  <div id="tNoData" style="text-align:center;padding:80px 20px">
+    <div style="font-size:3.5rem;margin-bottom:16px">🚀</div>
+    <div style="font-size:1.5rem;font-weight:700;color:#22a06b;margin-bottom:10px">Próximamente</div>
+    <div style="font-size:.9rem;color:#bbb;max-width:400px;margin:0 auto;line-height:1.6">Esta sección estará disponible muy pronto.<br>Talent Mapping — cruce de datos de potencial con avance de programas.</div>
   </div>
   <div id="tMain" style="display:none">
     <div class="talent-kpi-row">
@@ -1850,7 +1838,7 @@ function processTalentData(rows){
 }
 function refreshTabTalent(){
   if(!T.joined.length){g('tNoData').style.display='block';g('tMain').style.display='none';return;}
-  g('tNoData').style.display='none';g('tMain').style.display='block';
+  g('tNoData').style.display='block';g('tMain').style.display='none';
   var total=T.joined.length,withData=T.joined.filter(function(r){return r.hasData;});
   var onboarding=T.joined.filter(function(r){return r.avgProg===100;}).length;
   var avgProg=withData.length?Math.round(withData.reduce(function(s,r){return s+(r.avgProg||0);},0)/withData.length):0;
