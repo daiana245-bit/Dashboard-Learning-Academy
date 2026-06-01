@@ -254,7 +254,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
           <div class="kpi-card c5"><div class="kpi-value" id="pKpiProgs">0</div><div class="kpi-label">Programas</div></div>
         </div></div>
         <div class="benchmark-panel">
-          <div class="bench-title">Benchmark Global</div>
+          <div class="bench-title" id="pBenchTitle">Benchmark Global</div>
           <div class="bench-item"><div class="bench-label">Colaboradores</div><div class="bench-value" id="pBUsers">-</div></div>
           <div class="bench-item"><div class="bench-label">Completitud Global</div><div class="bench-value" id="pBComp">-</div><div class="bench-compare" id="pBCompC"></div></div>
           <div class="bench-item"><div class="bench-label">Progreso Promedio</div><div class="bench-value" id="pBAvg">-</div><div class="bench-compare" id="pBCompA"></div></div>
@@ -321,7 +321,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
           <div class="kpi-card c5"><div class="kpi-value" id="cKpiAvgProg">0%</div><div class="kpi-label">Progreso Promedio</div></div>
         </div></div>
         <div class="benchmark-panel" style="border-top-color:#AE90C3">
-          <div class="bench-title" style="color:#AE90C3">Benchmark Global</div>
+          <div class="bench-title" id="cBenchTitle" style="color:#AE90C3">Benchmark Global</div>
           <div class="bench-item"><div class="bench-label">Colaboradores</div><div class="bench-value" id="cBUsers">-</div></div>
           <div class="bench-item"><div class="bench-label">Completitud Global</div><div class="bench-value" id="cBComp">-</div><div class="bench-compare" id="cBCompC"></div></div>
           <div class="bench-item"><div class="bench-label">Cursos/Usuario</div><div class="bench-value" id="cBAvg">-</div></div>
@@ -667,7 +667,7 @@ var C=makeState([
 // ============================================================
 // HELPERS
 // ============================================================
-function g(id){return document.getElementById(id);}
+function g(id){return document.getElementById(id)||{textContent:'',innerHTML:'',style:{display:''},classList:{add:function(){},remove:function(){},toggle:function(){},contains:function(){return false;}}};}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function nH(s){return(s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
 function gV(map,aliases){
@@ -1674,10 +1674,10 @@ function cKPIs(){
   g('cKpiUsers').textContent=k.u.toLocaleString();
   g('cKpiCompleted100').textContent=comp100.toLocaleString();
   g('cKpiCompleted').textContent=k.cPct+'%';
-  g('cKpiAvg').textContent=k.avg+'%';
+  var cka=g('cKpiAvg');if(cka)cka.textContent=k.avg+'%';
   g('cKpiCursos').textContent=k.keys;
   var a=cHasFilters();['cB1','cB2','cB3','cB4'].forEach(function(id){g(id).style.display=a?'inline-block':'none';});
-  var note=g('cRecordNote');
+  var note=g('cRecordNote'); // null-safe below
   if(note) note.textContent='Información basada en un histórico de '+C.raw.length.toLocaleString()+' registros'+(a?' (mostrando '+C.filt.length.toLocaleString()+' filtrados).':' totales.');
 }function cBench(){
   var a=cHasFilters(), fk=calcK(C.filt);
