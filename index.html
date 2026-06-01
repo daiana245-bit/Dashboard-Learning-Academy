@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Conso<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -1791,8 +1791,7 @@ function cExport(){
   var s=g('cTSearch').value.trim().toLowerCase();
   var data=C.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.curso.toLowerCase().indexOf(s)>=0;});
-  var nl='
-',hdr=['Curso','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Finalizacion','Categoria'];
+  var nl='\n',hdr=['Curso','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Finalizacion','Categoria'];
   var csv=hdr.map(function(h){return '\"'+h+'\"';}).join(',')+nl;
   data.forEach(function(r){csv+=[r.curso,r.pais,r.nombre,r.estado,r.progreso,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaFin,r.categoria].map(function(c){return '\"'+String(c||'').replace(/\"/g,'\"\"')+'\"';}).join(',')+nl;});
   downloadCSV(csv,'cursos_export.csv');
