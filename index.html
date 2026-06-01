@@ -1,4 +1,4 @@
-Conso<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -1762,6 +1762,8 @@ function cC4(){
   Plotly.newPlot('cC4',[{type:'heatmap',z:z,x:xArr.map(function(v){return trunc(v,20);}),y:cArr.map(function(v){return trunc(v,32);}),colorscale:[[0,blend(BASE.orange,'#ffffff',0.35)],[0.5,BASE.yellow],[1,BASE.purple]],hovertemplate:'<b>%{y}</b><br>%{x}<br>%{z}%<extra></extra>',showscale:true,colorbar:{title:'%',thickness:14},xgap:2,ygap:2}],
     {margin:{t:20,b:85,l:Math.min(320,Math.max(130,mx*7)),r:65},annotations:ann,font:{family:'Inter',size:10},plot_bgcolor:'#fff',paper_bgcolor:'#fff',xaxis:{tickangle:xArr.length>5?-35:-10,automargin:true},yaxis:{autorange:'reversed',automargin:true}},{responsive:true,displayModeBar:false});
 }
+function cCharts(){cC1();cC2();cC3();cC4();}
+
 function cTable(){
   var s=g('cTSearch').value.trim().toLowerCase();
   var data=C.filt;
