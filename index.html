@@ -191,6 +191,16 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       </div>
     </div>
     <div id="modalStorageInfo" style="margin-top:12px;background:#f8f8f8;border-radius:8px;padding:10px 14px;font-size:.76rem;color:#666;line-height:1.7"></div>
+    <!-- Access log - only shown to global -->
+    <div id="accessLogSection" style="display:none;margin-top:14px;border-top:1px dashed #e5e5e5;padding-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:.82rem;font-weight:600;color:#444">📊 Registro de accesos</div>
+        <button onclick="loadAccessLog()" style="background:#f5f5f5;border:1px solid #e0e0e0;padding:4px 12px;border-radius:6px;font-size:.75rem;cursor:pointer;color:#666">Actualizar</button>
+      </div>
+      <div id="accessLogTable" style="font-size:.76rem;color:#666;max-height:220px;overflow-y:auto">
+        <div style="color:#bbb;text-align:center;padding:16px">Cargando...</div>
+      </div>
+    </div>
 
     <div style="display:flex;gap:10px;margin-top:12px">
       <button class="btn-load" id="btnLoadModal" style="display:block;flex:1;margin-top:0">Aplicar y actualizar</button>
@@ -771,10 +781,28 @@ function doLogout(){
   g('loginScreen').style.display='flex';
   g('loginUser').value='';g('loginPass').value='';
 }
+function logAccess(){
+  try{
+    var now=new Date();
+    var fecha=now.getFullYear()+'-'+(String(now.getMonth()+1).padStart(2,'0'))+'-'+String(now.getDate()).padStart(2,'0');
+    var hora=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':00';
+    var pais=CF&&CF.length===1?CF[0]:'GLOBAL';
+    var payload=JSON.stringify({usuario:CU,pais:pais,fecha:fecha,hora:hora});
+    var xhr=new XMLHttpRequest();
+    xhr.open('POST','https://ppvlccnpmdlhztdzhwcb.supabase.co/rest/v1/access_log');
+    xhr.setRequestHeader('apikey','sb_publishable_BxbcHEnAalFCH8JXlHHaGQ_h0RXhwbt');
+    xhr.setRequestHeader('Authorization','Bearer sb_publishable_BxbcHEnAalFCH8JXlHHaGQ_h0RXhwbt');
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.setRequestHeader('Prefer','return=minimal');
+    xhr.send(payload);
+  }catch(e){}
+}
+
 function enterDash(){
   g('loginScreen').style.display='none';
   g('dashboardScreen').style.display='block';
   g('userBadge').textContent=CU.charAt(0).toUpperCase()+CU.slice(1);
+  logAccess();
   // Show correct info bar based on role
   var isGlobal = (CU==='global');
   ['dibProgGlobal','dibCursGlobal'].forEach(function(id){var el=g(id);if(el)el.style.display=isGlobal?'':'none';});
@@ -822,13 +850,47 @@ function refreshTabCurs(){
 // ============================================================
 // UPLOAD
 // ============================================================
+function loadAccessLog(){
+  var el=g('accessLogTable');
+  if(!el)return;
+  el.innerHTML='<div style="color:#bbb;text-align:center;padding:12px">Cargando...</div>';
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET','https://ppvlccnpmdlhztdzhwcb.supabase.co/rest/v1/access_log?select=usuario,pais,fecha,hora&order=created_at.desc&limit=50');
+  xhr.setRequestHeader('apikey','sb_publishable_BxbcHEnAalFCH8JXlHHaGQ_h0RXhwbt');
+  xhr.setRequestHeader('Authorization','Bearer sb_publishable_BxbcHEnAalFCH8JXlHHaGQ_h0RXhwbt');
+  xhr.onload=function(){
+    if(xhr.status===200){
+      try{
+        var rows=JSON.parse(xhr.responseText);
+        if(!rows.length){el.innerHTML='<div style="color:#bbb;text-align:center;padding:12px">Sin registros aún</div>';return;}
+        var h='<table style="width:100%;border-collapse:collapse">';
+        h+='<tr style="background:#f5f5f5"><th style="padding:5px 8px;text-align:left;font-size:.7rem;color:#888;text-transform:uppercase">Usuario</th><th style="padding:5px 8px;text-align:left;font-size:.7rem;color:#888;text-transform:uppercase">País</th><th style="padding:5px 8px;text-align:left;font-size:.7rem;color:#888;text-transform:uppercase">Fecha</th><th style="padding:5px 8px;text-align:left;font-size:.7rem;color:#888;text-transform:uppercase">Hora</th></tr>';
+        rows.forEach(function(r){
+          var d=r.fecha?r.fecha.split('-').reverse().join('/'):'-';
+          var uColor=r.usuario==='global'?'#E97132':r.usuario==='argentina'?'#2196F3':r.usuario==='chile'?'#22a06b':r.usuario==='mexico'?'#F59E0B':'#AE90C3';
+          h+='<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:5px 8px"><span style="background:'+uColor+'22;color:'+uColor+';padding:2px 7px;border-radius:4px;font-weight:600;font-size:.72rem">'+r.usuario+'</span></td><td style="padding:5px 8px;color:#666;font-size:.76rem">'+r.pais+'</td><td style="padding:5px 8px;color:#666;font-size:.76rem">'+d+'</td><td style="padding:5px 8px;color:#666;font-size:.76rem">'+(r.hora?r.hora.substring(0,5):'-')+'</td></tr>';
+        });
+        h+='</table>';
+        el.innerHTML=h;
+      }catch(e){el.innerHTML='<div style="color:#E97132;padding:12px">Error cargando datos</div>';}
+    }else{
+      el.innerHTML='<div style="color:#E97132;padding:12px">Error: '+xhr.status+'</div>';
+    }
+  };
+  xhr.onerror=function(){el.innerHTML='<div style="color:#E97132;padding:12px">Sin conexión</div>';};
+  xhr.send();
+}
+
 function openModal(){
   pendProg=null;pendCurs=null;
   g('uiProg').style.display='none';g('uiCurs').style.display='none';
   g('fiProg').value='';g('fiCurs').value='';
-  // Show storage status
   g('modalStorageInfo').innerHTML = getStorageInfo();
-
+  var logSection=g('accessLogSection');
+  if(logSection){
+    if(CU==='global'){logSection.style.display='block';loadAccessLog();}
+    else logSection.style.display='none';
+  }
   g('uploadModal').style.display='flex';
 }
 function closeModal(){g('uploadModal').style.display='none';}
