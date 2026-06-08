@@ -336,7 +336,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         </div></div>
         
       </div>
-      <div class="chart-container"><div class="chart-title">Estado por Curso <span class="chart-subtitle" id="cCS1">(Top 20 por volumen)</span></div><div id="cC1" style="height:360px"></div></div>
+      <div class="chart-container" style="margin:0 14px 14px"><div class="chart-title">Estado por Curso <span class="chart-subtitle" id="cCS1">(Top 20 por volumen)</span></div><div id="cC1" style="height:360px;width:100%"></div></div>
       <div class="charts-row">
         <div class="chart-container"><div class="chart-title">Cumplimiento <span class="chart-subtitle" id="cCS2">por Pais</span></div><div id="cC2" style="height:300px"></div></div>
         <div class="chart-container"><div class="chart-title">Ranking de Cursos <span class="chart-subtitle">por Completitud</span></div><div id="cC3" style="height:300px"></div></div>
@@ -823,7 +823,10 @@ function enterDash(){
 // ============================================================
 function showTabProg(){g('tabProg').classList.add('active');g('tabCurs').classList.remove('active');g('tabTalent').classList.remove('active');g('tabBtnProg').className='tab-btn active-prog';g('tabBtnCurs').className='tab-btn';g('tabBtnTalent').className='tab-btn';}
 function showTabCurs(){g('tabCurs').classList.add('active');g('tabProg').classList.remove('active');g('tabTalent').classList.remove('active');g('tabBtnCurs').className='tab-btn active-curs';g('tabBtnProg').className='tab-btn';g('tabBtnTalent').className='tab-btn';}
-function showTabTalent(){g('tabTalent').classList.add('active');g('tabProg').classList.remove('active');g('tabCurs').classList.remove('active');g('tabBtnTalent').className='tab-btn active-talent';g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';}
+function showTabTalent(){g('tabTalent').classList.add('active');g('tabProg').classList.remove('active');g('tabCurs').classList.remove('active');g('tabBtnTalent').className='tab-btn active-talent';g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';
+  // Always show Próximamente
+  if(g('tNoData'))g('tNoData').style.display='block';if(g('tMain'))g('tMain').style.display='none';
+}
 function refreshTabProg(){
   if(P.raw.length>0){
     g('pNoData').style.display='none';g('pMain').style.display='block';
@@ -1770,17 +1773,23 @@ function cC1(){
   var labels=items.map(function(i){return i.k;}),cmaxY=Math.max.apply(null,items.map(function(i){return i.t;}));
   var clblC=items.map(function(i){return i.c>0?i.c:'';}),clblNC=items.map(function(i){return i.nc>0?i.nc:'';});
   var ctotals=items.map(function(i){return i.t;});
+  // Dynamic height based on number of bars
+  var cC1El=g('cC1');
+  var cC1H=Math.max(320, items.length*38+180);
+  if(cC1El) cC1El.style.height=cC1H+'px';
+  var bMargin=Math.max(160, items.length*12);
   Plotly.newPlot('cC1',[
-    {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.c;}),
+    {type:'bar',name:'Completado',x:labels.map(function(l){return trunc(l,30);}),y:items.map(function(i){return i.c;}),
      marker:{color:'#AE90C3'},text:clblC,textposition:'inside',textfont:{size:10,color:'#fff'},insidetextanchor:'middle',
      customdata:labels,hovertemplate:'<b>%{customdata}</b><br>Completado: %{y}<extra></extra>'},
-    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,35);}),y:items.map(function(i){return i.nc;}),
+    {type:'bar',name:'No completado',x:labels.map(function(l){return trunc(l,30);}),y:items.map(function(i){return i.nc;}),
      marker:{color:'#E97132'},text:clblNC,textposition:'inside',textfont:{size:10,color:'#fff'},insidetextanchor:'middle',
      customdata:labels,hovertemplate:'<b>%{customdata}</b><br>No completado: %{y}<extra></extra>'},
-    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,35);}),y:ctotals.map(function(){return 0;}),
+    {type:'bar',name:'',x:labels.map(function(l){return trunc(l,30);}),y:ctotals.map(function(){return 0;}),
      text:ctotals,textposition:'outside',textfont:{size:10,color:'#555'},marker:{color:'rgba(0,0,0,0)'},showlegend:false,hoverinfo:'skip'}
-  ],{barmode:'stack',margin:{t:30,b:labels.length>6?170:130,l:55,r:15},
-     xaxis:{tickangle:labels.length>6?-45:-20,automargin:true},
+  ],{barmode:'stack',
+     margin:{t:30,b:bMargin,l:55,r:30},
+     xaxis:{tickangle:-45,automargin:true,tickfont:{size:10}},
      yaxis:{title:'Cantidad',range:[0,Math.max(cmaxY*1.22,10)]},
      legend:{orientation:'h',y:1.08,x:0},font:{family:'Inter',size:11},
      plot_bgcolor:'#fff',paper_bgcolor:'#fff'},{responsive:true,displayModeBar:false});
@@ -1909,6 +1918,8 @@ function processTalentData(rows){
   refreshTabTalent();
 }
 function refreshTabTalent(){
+  // Always show Próximamente screen regardless of data
+  g('tNoData').style.display='block';g('tMain').style.display='none';return;
   if(!T.joined.length){g('tNoData').style.display='block';g('tMain').style.display='none';return;}
   g('tNoData').style.display='block';g('tMain').style.display='none';
   var total=T.joined.length,withData=T.joined.filter(function(r){return r.hasData;});
