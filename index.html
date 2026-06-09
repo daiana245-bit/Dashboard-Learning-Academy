@@ -127,6 +127,82 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
 @media(max-width:900px){.kpi-area{flex-direction:column}.charts-row{grid-template-columns:1fr}}
 @media(max-width:600px){.chart-container{padding:12px 8px}.kpi-row{grid-template-columns:1fr 1fr}.table-controls{flex-direction:column}.table-search{width:100%}}
 @media(max-width:768px){.filter-grid{grid-template-columns:1fr 1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.login-card{width:95%;padding:24px 18px}}
+
+/* ── Talent + Informe tabs ── */
+.tab-btn.active-talent{color:#22a06b;border-bottom-color:#22a06b}
+.tab-btn.active-informe{color:#7E63A0;border-bottom-color:#7E63A0}
+
+/* ── Informe Mensual redesign ── */
+.inf-wrap{padding:0 0 80px}
+.inf-hero{background:#fff;padding:28px 32px;margin:14px 14px 0;border-radius:16px;border:1px solid #f0f0f0;box-shadow:0 2px 12px rgba(0,0,0,.04);position:relative;overflow:hidden}
+.inf-hero::after{content:'XTC';position:absolute;right:24px;top:50%;transform:translateY(-50%);font-size:5rem;font-weight:900;color:rgba(0,0,0,.04);letter-spacing:4px;pointer-events:none}
+.inf-hero-eyebrow{font-size:.65rem;font-weight:700;color:#E97132;text-transform:uppercase;letter-spacing:3px;margin-bottom:6px}
+.inf-hero-title{font-size:1.6rem;font-weight:900;color:#1a1a1a;letter-spacing:-.5px;line-height:1.1}
+.inf-hero-sub{font-size:.95rem;font-weight:600;color:#AE90C3;margin-top:3px}
+.inf-hero-meta{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.inf-hero-pill{background:#f5f5f5;border-radius:20px;padding:4px 14px;font-size:.72rem;color:#888;font-weight:500}
+.inf-hero-pill.orange{background:#FEF0E7;color:#E97132;font-weight:600}
+.inf-period-sel{margin:14px 14px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.inf-period-sel label{font-size:.7rem;font-weight:600;color:#bbb;text-transform:uppercase;letter-spacing:.5px}
+.inf-period-sel select{padding:7px 14px;border:1.5px solid #eee;border-radius:8px;font-size:.82rem;background:#fff;outline:none;cursor:pointer;font-family:'Inter',sans-serif;color:#333}
+.inf-period-sel select:focus{border-color:#AE90C3}
+.inf-block{margin:14px 14px 0;background:#fff;border-radius:14px;padding:22px 26px;box-shadow:0 2px 12px rgba(0,0,0,.04);border:1px solid #f5f5f5}
+.inf-block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1.5px solid #f5f5f5}
+.inf-block-title{display:flex;align-items:center;gap:10px}
+.inf-block-dot{width:8px;height:8px;border-radius:50%;background:#E97132;flex-shrink:0}
+.inf-block-dot.purple{background:#AE90C3}
+.inf-block-dot.green{background:#22a06b}
+.inf-block-dot.yellow{background:#F5C842}
+.inf-block-name{font-size:.82rem;font-weight:800;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px}
+.inf-block-pct{font-size:1.6rem;font-weight:900;color:#1a1a1a;line-height:1}
+.inf-block-pct span{font-size:.75rem;font-weight:500;color:#bbb;margin-left:4px}
+.inf-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.inf-stat{text-align:center;padding:12px 8px;background:#f8f9fa;border-radius:10px}
+.inf-stat-val{font-size:1.4rem;font-weight:800;color:#1a1a1a;line-height:1}
+.inf-stat-lbl{font-size:.62rem;font-weight:600;color:#bbb;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+.inf-countries{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:4px}
+.inf-country{padding:14px 16px;border-radius:10px;background:#f8f9fa;position:relative;overflow:hidden}
+.inf-country-bg{position:absolute;bottom:-6px;right:8px;font-size:2.2rem;line-height:1;opacity:.3}
+.inf-country-name{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#aaa;margin-bottom:5px}
+.inf-country-pct{font-size:1.7rem;font-weight:900;color:#1a1a1a;line-height:1}
+.inf-country-bar{height:4px;background:#e8e8e8;border-radius:2px;margin:7px 0 5px;overflow:hidden}
+.inf-country-bar-inner{height:100%;border-radius:2px;transition:width .8s ease}
+.inf-country-detail{font-size:.68rem;color:#bbb}
+/* Recorrido selector */
+.inf-prog-selector{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.inf-prog-chip{padding:5px 12px;border-radius:20px;font-size:.74rem;font-weight:600;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#888;transition:all .15s;user-select:none}
+.inf-prog-chip.selected{background:#AE90C3;border-color:#AE90C3;color:#fff}
+.inf-prog-chip:hover{border-color:#AE90C3;color:#AE90C3}
+/* Evolutivo chart */
+.inf-evolutivo{margin:14px 14px 0;background:#fff;border-radius:14px;padding:22px 26px;box-shadow:0 2px 12px rgba(0,0,0,.04);border:1px solid #f5f5f5}
+.inf-evolutivo-title{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+/* XTC NEWS */
+.inf-news-wrap{margin:14px 14px 0;border-radius:14px;overflow:hidden;border:1px solid #f0f0f0;background:#fff}
+/* Animated ticker bar - only the XTC NEWS title moves */
+.inf-news-ticker-bar{background:#E97132;overflow:hidden;padding:8px 0;position:relative}
+.inf-news-ticker-track{display:flex;white-space:nowrap;animation:xtcTicker 18s linear infinite}
+.inf-news-ticker-track:hover{animation-play-state:paused}
+.inf-news-ticker-item{display:inline-block;padding:0 28px;font-size:.75rem;font-weight:900;color:#fff;letter-spacing:3px;text-transform:uppercase}
+.inf-news-ticker-item::after{content:'  ✦  ';opacity:.5}
+@keyframes xtcTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* Static news content below */
+.inf-news-content{padding:16px 20px}
+.inf-news-content-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.inf-news-content-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#bbb}
+.inf-news-edit-btn{background:#f5f5f5;border:1px solid #eee;color:#888;padding:4px 12px;border-radius:5px;font-size:.7rem;cursor:pointer;font-weight:600;display:none}
+.inf-news-edit-btn:hover{background:#EFE7F4;color:#AE90C3;border-color:#D4B8E8}
+.inf-news-list{display:flex;flex-direction:column;gap:8px}
+.inf-news-list-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:#f8f9fa;border-radius:8px;border-left:3px solid #E97132}
+.inf-news-list-item-icon{font-size:.9rem;flex-shrink:0;margin-top:1px}
+.inf-news-list-item-text{font-size:.8rem;color:#444;line-height:1.5}
+/* News editor */
+.inf-news-editor{display:none;padding:14px 20px;border-top:1px solid #f0f0f0;background:#fafafa}
+.inf-news-editor textarea{width:100%;background:#fff;border:1.5px solid #eee;border-radius:8px;padding:10px 12px;color:#333;font-size:.78rem;font-family:'Inter',sans-serif;outline:none;resize:vertical;min-height:90px;box-sizing:border-box}
+.inf-news-editor textarea:focus{border-color:#AE90C3}
+.inf-news-editor-btns{display:flex;gap:8px;margin-top:8px}
+.inf-news-save-btn{background:#E97132;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:.76rem;cursor:pointer;font-weight:600}
+.inf-news-cancel-btn{background:#eee;color:#888;border:none;padding:7px 14px;border-radius:7px;font-size:.76rem;cursor:pointer}
+.inf-retry-btn{background:#AE90C3;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:600;margin-top:12px}
 </style>
 </head>
 <body>
@@ -392,44 +468,94 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
 
 <!-- TAB INFORME MENSUAL -->
 <div class="tab-content" id="tabInforme">
-  <div id="infNoData" style="text-align:center;padding:60px 20px;color:#aaa">
-    <div style="font-size:2rem;margin-bottom:12px">📊</div>
-    <div style="font-weight:600;margin-bottom:8px">Sin datos cargados</div>
-    <div style="font-size:.85rem">Cargá los archivos de Programas y Cursos para ver el informe.</div>
+  <div id="infNoData" style="text-align:center;padding:80px 20px;color:#ccc">
+    <div style="font-size:2.5rem;margin-bottom:12px">📊</div>
+    <div style="font-weight:700;font-size:1rem;color:#bbb;margin-bottom:6px">Sin datos disponibles</div>
+    <div style="font-size:.82rem;margin-bottom:16px">Cargá los archivos de Programas y/o Cursos primero.</div>
+    <button class="inf-retry-btn" onclick="renderInforme()">🔄 Reintentar</button>
   </div>
   <div id="infMain" style="display:none">
-    <!-- Header -->
-    <div class="inf-header">
-      <div class="inf-title-sm">Reporte de Formación</div>
-      <div class="inf-title-lg">Experience Training Center</div>
-      <div class="inf-title-sub">TIENDAS GLOBAL</div>
-      <div class="inf-period" id="infPeriod">Cargando...</div>
+    <!-- Hero header -->
+    <div class="inf-hero">
+      <div class="inf-hero-eyebrow">Reporte de Formación · XTC</div>
+      <div class="inf-hero-title">Experience Training Center</div>
+      <div class="inf-hero-sub">TIENDAS GLOBAL</div>
+      <div class="inf-hero-meta">
+        <div class="inf-hero-pill" id="infPeriodPill">Acumulado 2026</div>
+        <div class="inf-hero-pill orange" id="infIngresosPill" style="display:none"></div>
+      </div>
     </div>
-    <!-- Month selector -->
-    <div class="inf-month-selector">
-      <span class="inf-month-label">Ver datos de:</span>
+    <!-- Period selector -->
+    <div class="inf-period-sel">
+      <label>Ver período</label>
       <select id="infMonthSel" onchange="renderInforme()">
-        <option value="all">Todo el período</option>
+        <option value="all">Acumulado 2026</option>
       </select>
-      <span class="inf-month-label" id="infIngresosMes" style="color:#E97132;font-weight:600"></span>
     </div>
-    <!-- ONBOARDING section -->
-    <div class="inf-section">
-      <div class="inf-section-title"><span></span>ONBOARDING TIENDAS</div>
-      <div class="inf-kpi-row" id="infOnbKpis"></div>
-      <div class="inf-country-grid" id="infOnbCountries"></div>
+    <!-- EVOLUTIVO chart -->
+    <div class="inf-evolutivo">
+      <div class="inf-evolutivo-title">📈 Evolutivo mes a mes — % Completitud Onboarding</div>
+      <div id="infEvChart" style="height:240px"></div>
     </div>
-    <!-- CX EXPERT section -->
-    <div class="inf-section">
-      <div class="inf-section-title"><span style="background:#AE90C3"></span>CX EXPERT</div>
-      <div class="inf-kpi-row" id="infCxKpis"></div>
-      <div class="inf-country-grid" id="infCxCountries"></div>
+    <!-- ONBOARDING block -->
+    <div class="inf-block" id="infOnbBlock">
+      <div class="inf-block-header">
+        <div class="inf-block-title"><div class="inf-block-dot"></div><div class="inf-block-name">Onboarding Tiendas</div></div>
+        <div class="inf-block-pct" id="infOnbPct">—<span>% global</span></div>
+      </div>
+      <div class="inf-stats-row" id="infOnbStats"></div>
+      <div class="inf-countries" id="infOnbCountries"></div>
     </div>
-    <!-- CURSOS section -->
-    <div class="inf-section" style="margin-bottom:14px">
-      <div class="inf-section-title"><span style="background:#22a06b"></span>CURSOS — RESUMEN GENERAL</div>
-      <div class="inf-kpi-row" id="infCursKpis"></div>
-      <div class="inf-country-grid" id="infCursCountries"></div>
+    <!-- CX EXPERT block -->
+    <div class="inf-block" id="infCxBlock">
+      <div class="inf-block-header">
+        <div class="inf-block-title"><div class="inf-block-dot purple"></div><div class="inf-block-name">CX Expert</div></div>
+        <div class="inf-block-pct" id="infCxPct">—<span>% global</span></div>
+      </div>
+      <div class="inf-stats-row" id="infCxStats"></div>
+      <div class="inf-countries" id="infCxCountries"></div>
+    </div>
+    <!-- RECORRIDO DE APRENDIZAJE block -->
+    <div class="inf-block" id="infRecBlock">
+      <div class="inf-block-header">
+        <div class="inf-block-title"><div class="inf-block-dot yellow"></div><div class="inf-block-name">🚀 Recorrido de Aprendizaje</div></div>
+        <div class="inf-block-pct" id="infRecPct">—<span>% promedio</span></div>
+      </div>
+      <!-- Program chips selector -->
+      <div id="infProgChips" class="inf-prog-selector"></div>
+      <div id="infRecContent"></div>
+    </div>
+    <!-- CURSOS RESUMEN block -->
+    <div class="inf-block">
+      <div class="inf-block-header">
+        <div class="inf-block-title"><div class="inf-block-dot green"></div><div class="inf-block-name">Cursos — % Cumplimiento por País</div></div>
+        <div class="inf-block-pct" id="infCursPct">—<span>% global</span></div>
+      </div>
+      <div class="inf-stats-row" id="infCursStats"></div>
+      <div class="inf-countries" id="infCursCountries"></div>
+    </div>
+    <!-- XTC NEWS -->
+    <div class="inf-news-wrap" style="margin-bottom:14px">
+      <!-- Animated ticker: only XTC NEWS title moves -->
+      <div class="inf-news-ticker-bar">
+        <div class="inf-news-ticker-track" id="infNewsTrack"></div>
+      </div>
+      <!-- Static news content -->
+      <div class="inf-news-content">
+        <div class="inf-news-content-header">
+          <div class="inf-news-content-title">Novedades</div>
+          <button class="inf-news-edit-btn" id="infNewsEditBtn" onclick="toggleNewsEditor()">✏️ Editar noticias</button>
+        </div>
+        <div class="inf-news-list" id="infNewsList"></div>
+      </div>
+      <div class="inf-news-editor" id="infNewsEditor">
+        <div style="font-size:.72rem;color:#aaa;margin-bottom:6px">Una noticia por línea:</div>
+        <textarea id="infNewsText" placeholder="📅 Miércoles 10 de junio — Encuentro exclusivo Operaciones + XTC"></textarea>
+        <div class="inf-news-editor-btns">
+          <button class="inf-news-save-btn" onclick="saveNews()">Guardar</button>
+          <button class="inf-news-cancel-btn" onclick="toggleNewsEditor()">Cancelar</button>
+        </div>
+      </div>
     </div>
   </div>
 </div></div>
@@ -525,11 +651,11 @@ var SB_HDRS   = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type'
 
 // ── Compact rows to arrays (saves ~60% bandwidth) ──────────
 function compactRow(r,isProg){
-  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto,r.fechaContr,r.nombre,r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0];
+  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto,r.fechaContr,r.nombre,r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0,r.fechaFinDate?r.fechaFinDate.getTime():0];
   return [r.curso,r.legajo,r.pais,r.segmento,r.depto,r.nombre,r.posicion,r.estado,r.progreso,r.fechaFin,r.distrito,r.region,r.calificacion,r.categoria];
 }
 function expandRow(a,isProg){
-  if(isProg){var ts=a[12];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],fechaContr:a[5],nombre:a[6],posicion:a[7],progreso:a[8],estado:a[9],distrito:a[10],region:a[11],fechaContrDate:ts?new Date(ts):null,primerAcceso:''};}
+  if(isProg){var ts=a[12],tsf=a[13];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],fechaContr:a[5],nombre:a[6],posicion:a[7],progreso:a[8],estado:a[9],distrito:a[10],region:a[11],fechaContrDate:ts?new Date(ts):null,fechaFinDate:tsf?new Date(tsf):null,primerAcceso:''}}
   return{curso:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],estado:a[7],progreso:a[8],fechaFin:a[9],distrito:a[10],region:a[11],calificacion:a[12],categoria:a[13]};
 }
 
@@ -780,7 +906,9 @@ function mapProgRow(headers,row){
     progreso:   parseProgreso(gV(map,['Progreso Programa (%)'])),
     estado:     normSt(gV(map,['Estatus del Programa'])),
     distrito:   gV(map,['Distrito']),
-    region:     gV(map,['Region','Regi\u00f3n'])
+    region:     gV(map,['Region','Regi\u00f3n']),
+    fechaFin:   parseDate(gV(map,['Fecha de Finalizacion','Fecha de finalizacion','Fecha finalizacion','Completion Date','FechaFin'])).txt,
+    fechaFinDate: parseDate(gV(map,['Fecha de Finalizacion','Fecha de finalizacion','Fecha finalizacion','Completion Date','FechaFin'])).date
   };
 }
 function mapCursRow(headers,row){
@@ -906,12 +1034,13 @@ function refreshTabProg(){
   if(P.raw.length>0){
     g('pNoData').style.display='none';g('pMain').style.display='block';
     if(pHasFilters()){
-      // User has active filters — preserve them, just re-filter with new data
       pDoFilter();
     }else{
-      // No filters active — safe to repopulate dropdowns
       pPopulate();pDoFilter();
     }
+    // Auto-refresh informe tab if visible
+    var tabInf=g('tabInforme');
+    if(tabInf&&tabInf.style.display==='block')renderInforme();
   }else{g('pNoData').style.display='block';g('pMain').style.display='none';}
 }
 function refreshTabCurs(){
@@ -2064,27 +2193,84 @@ function readExcelRaw(file,cb){
 // ============================================================
 // INFORME MENSUAL
 // ============================================================
-function getMonthName(m){
-  return ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m];
+var INF_NEWS_KEY = 'xtc_news';
+var INF_SEL_PROGS_KEY = 'xtc_inf_progs';
+var INF_SELECTED_PROGS = {};
+
+var INF_DEFAULT_NEWS = [
+  'Miércoles 10 de junio — Encuentro exclusivo Operaciones + XTC para compartir el recorrido de aprendizaje',
+  'Coming Soon | Global Training Dashboard — herramienta diseñada para hacer seguimiento del desarrollo de cada distrito',
+  'El programa de Onboarding debe completarse dentro de los primeros 10 días y es la formación base obligatoria'
+];
+
+function getNews(){
+  try{
+    var raw=localStorage.getItem(INF_NEWS_KEY);
+    if(raw)return JSON.parse(raw);
+  }catch(e){}
+  return INF_DEFAULT_NEWS;
+}
+function saveNews(){
+  var ta=g('infNewsText');if(!ta)return;
+  var lines=ta.value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  if(!lines.length){alert('Agregá al menos una noticia.');return;}
+  try{localStorage.setItem(INF_NEWS_KEY,JSON.stringify(lines));}catch(e){}
+  renderNewsTicker();
+  toggleNewsEditor();
+}
+function toggleNewsEditor(){
+  var ed=g('infNewsEditor'),ta=g('infNewsText');
+  if(!ed)return;
+  var open=ed.style.display==='block';
+  ed.style.display=open?'none':'block';
+  if(!open&&ta)ta.value=getNews().join('\n');
+}
+function renderNewsTicker(){
+  // Ticker bar: repeating "XTC NEWS" title
+  var track=g('infNewsTrack');
+  if(track){
+    var label='<span class="inf-news-ticker-item">XTC NEWS</span>';
+    track.innerHTML=label.repeat(20); // enough to fill any screen width
+  }
+  // Static news list below
+  var list=g('infNewsList');
+  if(list){
+    var news=getNews();
+    var icons=['📅','🚀','⭐','📌','🎯','✅','💡'];
+    list.innerHTML=news.map(function(n,i){
+      return '<div class="inf-news-list-item">'+
+        '<span class="inf-news-list-item-icon">'+icons[i%icons.length]+'</span>'+
+        '<span class="inf-news-list-item-text">'+esc(n)+'</span>'+
+        '</div>';
+    }).join('');
+  }
+}
+function showNewsEditBtn(){
+  var btn=g('infNewsEditBtn');
+  if(btn)btn.style.display=(CU==='global')?'block':'none';
 }
 
 function buildMonthOptions(){
   var sel=g('infMonthSel');if(!sel)return;
-  // Get all unique year-month from fechaContrDate
   var months={};
+  var MNAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  function addDate(d){
+    if(!d||d.getFullYear()<2026)return;
+    var y=d.getFullYear(),m=d.getMonth();
+    var key=y+'-'+String(m+1).padStart(2,'0');
+    months[key]={y:y,m:m,label:MNAMES[m]+' '+y};
+  }
   P.raw.forEach(function(r){
-    if(r.fechaContrDate){
-      var y=r.fechaContrDate.getFullYear(),m=r.fechaContrDate.getMonth();
-      var key=y+'-'+String(m+1).padStart(2,'0');
-      months[key]={y:y,m:m,label:getMonthName(m)+' '+y};
-    }
+    addDate(r.fechaContrDate);  // for Onboarding
+    addDate(r.fechaFinDate);    // for other programs
   });
   var sorted=Object.keys(months).sort().reverse();
-  // Rebuild options
-  sel.innerHTML='<option value="all">Todo el período</option>';
-  sorted.slice(0,24).forEach(function(k){
+  var cur=sel.value;
+  sel.innerHTML='<option value="all">Acumulado 2026</option>';
+  sorted.forEach(function(k){
     var opt=document.createElement('option');
     opt.value=k;opt.textContent=months[k].label;
+    if(k===cur)opt.selected=true;
     sel.appendChild(opt);
   });
 }
@@ -2092,145 +2278,258 @@ function buildMonthOptions(){
 function getInformeData(){
   var sel=g('infMonthSel');
   var period=sel?sel.value:'all';
-  var progData=P.raw.filter(function(r){
-    // Filter by onboarding-related programs (or all if no period filter)
+  // Base: all prog data from 2026 onwards
+  var progBase=P.raw.filter(function(r){
+    var d=r.fechaContrDate;
+    return !d||(d.getFullYear()>=2026);
+  });
+
+  function matchesPeriod(r){
     if(period==='all')return true;
     var parts=period.split('-');
-    var y=parseInt(parts[0]),m=parseInt(parts[1])-1;
-    return r.fechaContrDate&&r.fechaContrDate.getFullYear()===y&&r.fechaContrDate.getMonth()===m;
-  });
-  var cursData=C.raw.filter(function(r){
-    if(period==='all')return true;
-    var parts=period.split('-');
-    var y=parseInt(parts[0]),m=parseInt(parts[1])-1;
-    // Use curso date if available, otherwise include all
-    return true;
-  });
-  return{prog:progData,curs:cursData,period:period};
+    var fy=parseInt(parts[0]),fm=parseInt(parts[1])-1;
+    var isOnb=r.programa&&r.programa.toUpperCase().indexOf('ONBOARDING')>=0;
+    if(isOnb){
+      // Onboarding: use fechaContrDate
+      return r.fechaContrDate&&r.fechaContrDate.getFullYear()===fy&&r.fechaContrDate.getMonth()===fm;
+    }else{
+      // Other programs: use fechaFinDate (completion date)
+      return r.fechaFinDate&&r.fechaFinDate.getFullYear()===fy&&r.fechaFinDate.getMonth()===fm;
+    }
+  }
+
+  var progData=period==='all'?progBase:progBase.filter(matchesPeriod);
+  return{prog:progData,curs:C.raw,period:period};
 }
 
-function calcPct(data, filterFn){
-  var sub=filterFn?data.filter(filterFn):data;
-  if(!sub.length)return{pct:0,comp:0,total:0};
-  var comp=sub.filter(function(r){return r.estado==='Completado';}).length;
-  return{pct:Math.round(comp/sub.length*100),comp:comp,total:sub.length};
+function calcPct(data){
+  if(!data||!data.length)return{pct:0,comp:0,total:0};
+  var comp=data.filter(function(r){return r.estado==='Completado';}).length;
+  return{pct:Math.round(comp/data.length*100),comp:comp,total:data.length};
 }
 
-function infKpiHTML(val,lbl,sub,cls){
-  cls=cls||'';
-  return '<div class="inf-kpi '+cls+'"><div class="inf-kpi-val">'+val+'</div><div class="inf-kpi-lbl">'+lbl+'</div>'+(sub?'<div class="inf-kpi-sub">'+sub+'</div>':'')+'</div>';
+function mkStat(val,lbl){
+  return '<div class="inf-stat"><div class="inf-stat-val">'+val+'</div><div class="inf-stat-lbl">'+lbl+'</div></div>';
 }
-
-function infCountryHTML(country, pct, comp, total, color){
-  color=color||'#AE90C3';
-  var barColor=pct>=70?'#22a06b':pct>=50?'#F5A874':'#E97132';
-  return '<div class="inf-country-card" style="border-top-color:'+color+'">'+
-    '<div class="inf-country-name">'+country+'</div>'+
+function mkCountry(c,pct,comp,total){
+  var FLAGS={'ARGENTINA':'🇦🇷','CHILE':'🇨🇱','MEXICO':'🇲🇽','PERU':'🇵🇪'};
+  var col=pct>=70?'#22a06b':pct>=50?'#F5A874':'#E97132';
+  return '<div class="inf-country">'+
+    '<div class="inf-country-bg">'+(FLAGS[c]||'')+'</div>'+
+    '<div class="inf-country-name">'+(FLAGS[c]||'')+' '+c+'</div>'+
     '<div class="inf-country-pct">'+pct+'%</div>'+
-    '<div class="inf-country-bar"><div class="inf-country-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'+
-    '<div class="inf-country-detail">'+comp+' completaron de '+total+'</div>'+
+    '<div class="inf-country-bar"><div class="inf-country-bar-inner" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+    '<div class="inf-country-detail">'+comp+' de '+total+' completaron</div>'+
     '</div>';
 }
 
+function renderEvolutivo(){
+  var MNAMES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var onbMonths={}, cxMonths={};
+
+  // Onboarding: group by fechaContrDate
+  P.raw.filter(function(r){return r.fechaContrDate&&r.fechaContrDate.getFullYear()>=2026&&r.programa&&r.programa.toUpperCase().indexOf('ONBOARDING')>=0;})
+  .forEach(function(r){
+    var y=r.fechaContrDate.getFullYear(),m=r.fechaContrDate.getMonth();
+    var k=y+'-'+String(m+1).padStart(2,'0');
+    if(!onbMonths[k])onbMonths[k]={c:0,t:0,label:MNAMES[m]+' '+y};
+    onbMonths[k].t++;if(r.estado==='Completado')onbMonths[k].c++;
+  });
+
+  // CX Expert: group by fechaFinDate
+  P.raw.filter(function(r){return r.fechaFinDate&&r.fechaFinDate.getFullYear()>=2026&&r.programa&&r.programa.toUpperCase().indexOf('CX')>=0&&r.programa.toUpperCase().indexOf('EXPERT')>=0;})
+  .forEach(function(r){
+    var y=r.fechaFinDate.getFullYear(),m=r.fechaFinDate.getMonth();
+    var k=y+'-'+String(m+1).padStart(2,'0');
+    if(!cxMonths[k])cxMonths[k]={c:0,t:0,label:MNAMES[m]+' '+y};
+    cxMonths[k].t++;if(r.estado==='Completado')cxMonths[k].c++;
+  });
+
+  // Merge all months for x-axis
+  var allKeys=[...new Set([...Object.keys(onbMonths),...Object.keys(cxMonths)])].sort();
+
+  if(allKeys.length<2){
+    var el=g('infEvChart');
+    if(el)el.innerHTML='<div style="text-align:center;padding:40px;color:#ccc;font-size:.82rem">Se necesitan al menos 2 meses de datos para mostrar el evolutivo.</div>';
+    return;
+  }
+
+  var labels=allKeys.map(function(k){return (onbMonths[k]||cxMonths[k]).label;});
+  var onbVals=allKeys.map(function(k){return onbMonths[k]?Math.round(onbMonths[k].c/onbMonths[k].t*100):null;});
+  var cxVals=allKeys.map(function(k){return cxMonths[k]?Math.round(cxMonths[k].c/cxMonths[k].t*100):null;});
+
+  Plotly.newPlot('infEvChart',[
+    {type:'scatter',mode:'lines+markers',name:'Onboarding',x:labels,y:onbVals,
+     line:{color:'#E97132',width:2.5},marker:{color:'#E97132',size:7},
+     connectgaps:true,
+     hovertemplate:'<b>Onboarding %{x}</b><br>%{y}%<extra></extra>'},
+    {type:'scatter',mode:'lines+markers',name:'CX Expert',x:labels,y:cxVals,
+     line:{color:'#AE90C3',width:2.5},marker:{color:'#AE90C3',size:7},
+     connectgaps:true,
+     hovertemplate:'<b>CX Expert %{x}</b><br>%{y}%<extra></extra>'}
+  ],{
+    margin:{t:20,b:40,l:45,r:20},
+    yaxis:{range:[0,110],ticksuffix:'%',gridcolor:'#f5f5f5',zeroline:false},
+    xaxis:{gridcolor:'#f5f5f5'},
+    legend:{orientation:'h',y:1.12,x:0},
+    plot_bgcolor:'#fff',paper_bgcolor:'#fff',
+    font:{family:'Inter',size:11}
+  },{responsive:true,displayModeBar:false});
+}
+
+function renderRecorrido(d){
+  // Get all programs except Onboarding and CX Expert
+  var allProgs=[...new Set(P.raw.map(function(r){return r.programa;}))].filter(function(p){
+    return p&&p.toUpperCase().indexOf('ONBOARDING')<0&&p.toUpperCase().indexOf('CX EXPERT')<0;
+  }).sort();
+
+  // Restore saved selection
+  try{
+    var saved=localStorage.getItem(INF_SEL_PROGS_KEY);
+    if(saved)INF_SELECTED_PROGS=JSON.parse(saved);
+    // Default: select first 5 if nothing saved
+    if(!Object.keys(INF_SELECTED_PROGS).length){
+      allProgs.slice(0,5).forEach(function(p){INF_SELECTED_PROGS[p]=1;});
+    }
+  }catch(e){}
+
+  // Render chips
+  var chipsEl=g('infProgChips');
+  if(chipsEl){
+    chipsEl.innerHTML=allProgs.map(function(p){
+      var sel=INF_SELECTED_PROGS[p]?'selected':'';
+      return '<div class="inf-prog-chip '+sel+'" data-prog="'+p.replace(/"/g,'&quot;')+'" onclick="toggleProgChipByEl(this)">'+esc(trunc(p,30))+'</div>';
+    }).join('');
+  }
+
+  // Render selected programs
+  var selProgs=Object.keys(INF_SELECTED_PROGS);
+  var COUNTRIES=['ARGENTINA','CHILE','MEXICO','PERU'];
+  var content='';
+  var totalPcts=[];
+
+  selProgs.forEach(function(prog){
+    var pData=d.prog.filter(function(r){return r.programa===prog;});
+    if(!pData.length)return;
+    var gPct=calcPct(pData);
+    totalPcts.push(gPct.pct);
+    content+='<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #f5f5f5">';
+    content+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+    content+='<div style="font-size:.78rem;font-weight:700;color:#333">'+esc(prog)+'</div>';
+    content+='<div style="font-size:1rem;font-weight:800;color:#1a1a1a">'+gPct.pct+'%</div>';
+    content+='</div>';
+    content+='<div class="inf-countries" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">';
+    COUNTRIES.forEach(function(c){
+      var s=pData.filter(function(r){return r.pais===c;});
+      if(!s.length)return;
+      var k=calcPct(s);
+      var col=k.pct>=70?'#22a06b':k.pct>=50?'#F5A874':'#E97132';
+      var FLAGS={'ARGENTINA':'🇦🇷','CHILE':'🇨🇱','MEXICO':'🇲🇽','PERU':'🇵🇪'};
+      content+='<div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;position:relative;overflow:hidden">';
+      content+='<div style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#bbb;margin-bottom:3px">'+(FLAGS[c]||'')+' '+c+'</div>';
+      content+='<div style="font-size:1.3rem;font-weight:900;color:#1a1a1a">'+k.pct+'%</div>';
+      content+='<div style="height:3px;background:#eee;border-radius:2px;margin:5px 0 3px;overflow:hidden"><div style="width:'+k.pct+'%;height:100%;background:'+col+';border-radius:2px"></div></div>';
+      content+='<div style="font-size:.65rem;color:#bbb">'+k.comp+' de '+k.total+'</div>';
+      content+='</div>';
+    });
+    content+='</div></div>';
+  });
+
+  var avgPct=totalPcts.length?Math.round(totalPcts.reduce(function(a,b){return a+b;},0)/totalPcts.length):0;
+  if(g('infRecPct'))g('infRecPct').innerHTML=avgPct+'<span>% promedio</span>';
+  if(g('infRecContent'))g('infRecContent').innerHTML=content||'<div style="color:#ccc;font-size:.8rem">Seleccioná programas arriba para ver el detalle.</div>';
+}
+
+function toggleProgChipByEl(el){
+  var prog=el.getAttribute('data-prog');
+  if(prog)toggleProgChip(prog);
+}
+function toggleProgChip(prog){
+  if(INF_SELECTED_PROGS[prog])delete INF_SELECTED_PROGS[prog];
+  else INF_SELECTED_PROGS[prog]=1;
+  try{localStorage.setItem(INF_SEL_PROGS_KEY,JSON.stringify(INF_SELECTED_PROGS));}catch(e){}
+  var d=getInformeData();
+  renderRecorrido(d);
+}
+
 function renderInforme(){
+  // Retry if data not loaded yet
   if(!P.raw.length&&!C.raw.length){
     if(g('infNoData'))g('infNoData').style.display='block';
     if(g('infMain'))g('infMain').style.display='none';
+    setTimeout(function(){if(P.raw.length||C.raw.length)renderInforme();},1000);
     return;
   }
   if(g('infNoData'))g('infNoData').style.display='none';
   if(g('infMain'))g('infMain').style.display='block';
 
   buildMonthOptions();
-  var d=getInformeData();
-  var now=new Date();
-  var period=d.period==='all'?'Acumulado total':'Período: '+g('infMonthSel').options[g('infMonthSel').selectedIndex].text;
-  if(g('infPeriod'))g('infPeriod').textContent=period;
+  showNewsEditBtn();
+  renderNewsTicker();
 
-  // Ingresos del mes (new hires by fechaContrDate in selected period)
+  var d=getInformeData();
+  var COUNTRIES=['ARGENTINA','CHILE','MEXICO','PERU'];
+
+  // Period pill
+  var sel=g('infMonthSel');
+  var periodLabel=d.period==='all'?'Acumulado 2026':(sel&&sel.selectedIndex>=0?sel.options[sel.selectedIndex].text:'');
+  if(g('infPeriodPill'))g('infPeriodPill').textContent=periodLabel;
+
+  // Ingresos del período (from Jan 2026)
   var ingresos=0;
   if(d.period!=='all'){
     var parts=d.period.split('-');
     var fy=parseInt(parts[0]),fm=parseInt(parts[1])-1;
-    var legajosIngreso=new Set();
+    var legIng=new Set();
     P.raw.forEach(function(r){
       if(r.fechaContrDate&&r.fechaContrDate.getFullYear()===fy&&r.fechaContrDate.getMonth()===fm)
-        legajosIngreso.add(r.legajo);
+        legIng.add(r.legajo);
     });
-    ingresos=legajosIngreso.size;
-    if(g('infIngresosMes'))g('infIngresosMes').textContent=ingresos+' ingresos en el período';
-  }else{
-    if(g('infIngresosMes'))g('infIngresosMes').textContent='';
+    ingresos=legIng.size;
   }
+  var ingEl=g('infIngresosPill');
+  if(ingEl){ingEl.style.display=ingresos>0?'':'none';if(ingresos>0)ingEl.textContent=ingresos+' ingresos en el período';}
 
-  var COUNTRIES=['ARGENTINA','CHILE','MEXICO','PERU'];
-  var countryColors={'ARGENTINA':'#2196F3','CHILE':'#22a06b','MEXICO':'#F59E0B','PERU':'#AE90C3'};
+  // Evolutivo
+  renderEvolutivo();
 
-  // ── ONBOARDING ──────────────────────────────────────────────
+  // ── ONBOARDING ─────────────────────────────────────────────
   var onbData=d.prog.filter(function(r){return r.programa&&r.programa.toUpperCase().indexOf('ONBOARDING')>=0;});
-  var onbGlobal=calcPct(onbData);
-  var onbLegajosComp=new Set();
-  onbData.filter(function(r){return r.estado==='Completado';}).forEach(function(r){onbLegajosComp.add(r.legajo);});
-  var onbUsers=new Set(onbData.map(function(r){return r.legajo;})).size;
+  var onbG=calcPct(onbData);
+  var onbComp=new Set(onbData.filter(function(r){return r.estado==='Completado';}).map(function(r){return r.legajo;})).size;
+  var onbTotal=new Set(onbData.map(function(r){return r.legajo;})).size;
+  if(g('infOnbPct'))g('infOnbPct').innerHTML=onbG.pct+'<span>% global</span>';
+  var onbStats=mkStat(onbG.pct+'%','Completitud')+mkStat(onbComp,'Completaron')+mkStat(onbTotal,'Nómina total');
+  if(ingresos>0)onbStats+=mkStat(ingresos,'Ingresos período');
+  if(g('infOnbStats'))g('infOnbStats').innerHTML=onbStats;
+  var onbC='';COUNTRIES.forEach(function(c){var s=onbData.filter(function(r){return r.pais===c;});if(s.length){var k=calcPct(s);onbC+=mkCountry(c,k.pct,k.comp,k.total);}});
+  if(g('infOnbCountries'))g('infOnbCountries').innerHTML=onbC||'<div style="color:#ccc;font-size:.8rem">Sin datos de Onboarding</div>';
 
-  var onbKpis='';
-  onbKpis+=infKpiHTML(onbGlobal.pct+'%','% Acumulado',onbGlobal.comp+' completaron de '+onbGlobal.total,'');
-  onbKpis+=infKpiHTML(onbLegajosComp.size,'Colaboradores que completaron','Único por legajo','purple');
-  if(ingresos>0)onbKpis+=infKpiHTML(ingresos,'Ingresos del período','Nuevos colaboradores','green');
-  if(g('infOnbKpis'))g('infOnbKpis').innerHTML=onbKpis;
-
-  var onbCountries='';
-  COUNTRIES.forEach(function(c){
-    var sub=onbData.filter(function(r){return r.pais===c;});
-    if(!sub.length)return;
-    var k=calcPct(sub);
-    onbCountries+=infCountryHTML(c,k.pct,k.comp,k.total,countryColors[c]);
-  });
-  if(g('infOnbCountries'))g('infOnbCountries').innerHTML=onbCountries||'<div style="color:#bbb;font-size:.82rem">Sin datos de Onboarding</div>';
-
-  // ── CX EXPERT ───────────────────────────────────────────────
+  // ── CX EXPERT ──────────────────────────────────────────────
   var cxData=d.prog.filter(function(r){return r.programa&&r.programa.toUpperCase().indexOf('CX')>=0&&r.programa.toUpperCase().indexOf('EXPERT')>=0;});
-  var cxGlobal=calcPct(cxData);
-  var cxComp=new Set();
-  cxData.filter(function(r){return r.estado==='Completado';}).forEach(function(r){cxComp.add(r.legajo);});
+  var cxG=calcPct(cxData);
+  var cxComp=new Set(cxData.filter(function(r){return r.estado==='Completado';}).map(function(r){return r.legajo;})).size;
+  var cxTotal=new Set(cxData.map(function(r){return r.legajo;})).size;
+  if(g('infCxPct'))g('infCxPct').innerHTML=cxG.pct+'<span>% global</span>';
+  if(g('infCxStats'))g('infCxStats').innerHTML=mkStat(cxG.pct+'%','Completitud')+mkStat(cxComp,'Completaron')+mkStat(cxTotal,'Nómina total');
+  var cxC='';COUNTRIES.forEach(function(c){var s=cxData.filter(function(r){return r.pais===c;});if(s.length){var k=calcPct(s);cxC+=mkCountry(c,k.pct,k.comp,k.total);}});
+  if(g('infCxCountries'))g('infCxCountries').innerHTML=cxC||'<div style="color:#ccc;font-size:.8rem">Sin datos de CX Expert</div>';
 
-  var cxKpis='';
-  cxKpis+=infKpiHTML(cxGlobal.pct+'%','% Cumplimiento Global',cxGlobal.comp+' completaron de '+cxGlobal.total,'purple');
-  cxKpis+=infKpiHTML(cxComp.size,'Colaboradores que completaron','Único por legajo','');
-  if(g('infCxKpis'))g('infCxKpis').innerHTML=cxKpis||'<div style="color:#bbb;font-size:.82rem">Sin datos de CX Expert</div>';
+  // ── RECORRIDO ──────────────────────────────────────────────
+  renderRecorrido(d);
 
-  var cxCountries='';
-  COUNTRIES.forEach(function(c){
-    var sub=cxData.filter(function(r){return r.pais===c;});
-    if(!sub.length)return;
-    var k=calcPct(sub);
-    cxCountries+=infCountryHTML(c,k.pct,k.comp,k.total,countryColors[c]);
-  });
-  if(g('infCxCountries'))g('infCxCountries').innerHTML=cxCountries||'<div style="color:#bbb;font-size:.82rem">Sin datos de CX Expert</div>';
-
-  // ── CURSOS ──────────────────────────────────────────────────
+  // ── CURSOS RESUMEN ─────────────────────────────────────────
   var cursAll=C.raw;
-  var cursUsers=new Set(cursAll.map(function(r){return r.legajo;})).size;
+  var cursG=calcPct(cursAll);
   var cursComp=new Set(cursAll.filter(function(r){return r.estado==='Completado';}).map(function(r){return r.legajo;})).size;
+  var cursUsers=new Set(cursAll.map(function(r){return r.legajo;})).size;
   var cursUniq=new Set(cursAll.map(function(r){return r.curso;})).size;
-  var cursAvg=cursAll.length?Math.round(cursAll.reduce(function(s,r){return s+r.progreso;},0)/cursAll.length):0;
-
-  var cursKpis='';
-  cursKpis+=infKpiHTML(cursUniq,'Cursos activos','','green');
-  cursKpis+=infKpiHTML(cursUsers,'Colaboradores con cursos','','');
-  cursKpis+=infKpiHTML(cursComp,'Completaron al menos 1','','purple');
-  cursKpis+=infKpiHTML(cursAvg+'%','Progreso promedio','','yellow');
-  if(g('infCursKpis'))g('infCursKpis').innerHTML=cursKpis;
-
-  var cursCountries='';
-  COUNTRIES.forEach(function(c){
-    var sub=cursAll.filter(function(r){return r.pais===c;});
-    if(!sub.length)return;
-    var k=calcPct(sub);
-    cursCountries+=infCountryHTML(c,k.pct,k.comp,k.total,countryColors[c]);
-  });
-  if(g('infCursCountries'))g('infCursCountries').innerHTML=cursCountries||'<div style="color:#bbb;font-size:.82rem">Sin datos de Cursos</div>';
+  if(g('infCursPct'))g('infCursPct').innerHTML=cursG.pct+'<span>% global</span>';
+  if(g('infCursStats'))g('infCursStats').innerHTML=mkStat(cursUniq,'Cursos activos')+mkStat(cursUsers,'Colaboradores')+mkStat(cursComp,'Completaron ≥1')+mkStat(cursG.pct+'%','Tasa global');
+  var cC='';COUNTRIES.forEach(function(c){var s=cursAll.filter(function(r){return r.pais===c;});if(s.length){var k=calcPct(s);cC+=mkCountry(c,k.pct,k.comp,k.total);}});
+  if(g('infCursCountries'))g('infCursCountries').innerHTML=cC||'<div style="color:#ccc;font-size:.8rem">Sin datos de Cursos</div>';
 }
+
 
 document.addEventListener('DOMContentLoaded',function(){
   // Auth
