@@ -226,6 +226,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
     <button class="tab-btn active-prog" id="tabBtnProg">Programas</button>
     <button class="tab-btn" id="tabBtnCurs">Cursos</button>
     <button class="tab-btn" id="tabBtnTalent">Talent Mapping</button>
+    <button class="tab-btn" id="tabBtnInforme">Informe Mensual</button>
   </div>
   <!-- TAB PROGRAMAS -->
   <div class="tab-content active" id="tabProg">
@@ -387,6 +388,50 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       <div class="pagination" id="tPag"></div>
     </div>
   </div>
+</div>
+
+<!-- TAB INFORME MENSUAL -->
+<div class="tab-content" id="tabInforme">
+  <div id="infNoData" style="text-align:center;padding:60px 20px;color:#aaa">
+    <div style="font-size:2rem;margin-bottom:12px">📊</div>
+    <div style="font-weight:600;margin-bottom:8px">Sin datos cargados</div>
+    <div style="font-size:.85rem">Cargá los archivos de Programas y Cursos para ver el informe.</div>
+  </div>
+  <div id="infMain" style="display:none">
+    <!-- Header -->
+    <div class="inf-header">
+      <div class="inf-title-sm">Reporte de Formación</div>
+      <div class="inf-title-lg">Experience Training Center</div>
+      <div class="inf-title-sub">TIENDAS GLOBAL</div>
+      <div class="inf-period" id="infPeriod">Cargando...</div>
+    </div>
+    <!-- Month selector -->
+    <div class="inf-month-selector">
+      <span class="inf-month-label">Ver datos de:</span>
+      <select id="infMonthSel" onchange="renderInforme()">
+        <option value="all">Todo el período</option>
+      </select>
+      <span class="inf-month-label" id="infIngresosMes" style="color:#E97132;font-weight:600"></span>
+    </div>
+    <!-- ONBOARDING section -->
+    <div class="inf-section">
+      <div class="inf-section-title"><span></span>ONBOARDING TIENDAS</div>
+      <div class="inf-kpi-row" id="infOnbKpis"></div>
+      <div class="inf-country-grid" id="infOnbCountries"></div>
+    </div>
+    <!-- CX EXPERT section -->
+    <div class="inf-section">
+      <div class="inf-section-title"><span style="background:#AE90C3"></span>CX EXPERT</div>
+      <div class="inf-kpi-row" id="infCxKpis"></div>
+      <div class="inf-country-grid" id="infCxCountries"></div>
+    </div>
+    <!-- CURSOS section -->
+    <div class="inf-section" style="margin-bottom:14px">
+      <div class="inf-section-title"><span style="background:#22a06b"></span>CURSOS — RESUMEN GENERAL</div>
+      <div class="inf-kpi-row" id="infCursKpis"></div>
+      <div class="inf-country-grid" id="infCursCountries"></div>
+    </div>
+  </div>
 </div></div>
 <script>
 // ============================================================
@@ -508,7 +553,7 @@ function sbSave(isProg, allData, meta, onDone){
 
   function finish(ok){
     if(ok){
-      console.log('[Supabase] Saved '+(isProg?'Programas':'Cursos')+' ('+Math.round(JSON.stringify(compact).length/1024)+' KB)');
+      // save ok
       if(infoEl) infoEl.textContent = meta.loadTime + ' \u2713 guardado en la nube';
       try{ localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs', JSON.stringify({rows:compact,meta:meta})); }catch(e){}
       if(onDone) onDone(null);
@@ -526,7 +571,7 @@ function sbSave(isProg, allData, meta, onDone){
       if(s2 >= 200 && s2 < 300){
         finish(true);
       }else{
-        console.error('[Supabase] Insert error:', s2, body2);
+        // suppressed
         finish(false);
       }
     });
@@ -553,7 +598,7 @@ function sbLoad(isProg, onDone){
     }else if(status === 406 || status === 404){
       onDone('no_data', null, {});
     }else{
-      console.error('[Supabase] Load error:', status, body);
+      // [Supabase] Load error suppressed
       onDone('HTTP '+status, null, {});
     }
   });
@@ -623,11 +668,11 @@ function restoreData(isProg, onDone){
     if(!err&&rows&&rows.length){
       applyData(isProg,rows,meta);
       if(isProg)refreshTabProg();else refreshTabCurs();
-      console.log('[Supabase] Loaded fresh '+(isProg?'Programas':'Cursos')+': '+rows.length+' rows');
+      // Supabase load ok
     }else if(err==='no_data'){
-      if(!cached)console.log('[Supabase] No data yet for '+(isProg?'Programas':'Cursos'));
+      // no data yet
     }else{
-      console.warn('[Supabase] Load error:',err,'— using cache');
+      // suppressed
     }
     if(onDone)onDone();
   });
@@ -821,11 +866,41 @@ function enterDash(){
 // ============================================================
 // TABS
 // ============================================================
-function showTabProg(){g('tabProg').classList.add('active');g('tabCurs').classList.remove('active');g('tabTalent').classList.remove('active');g('tabBtnProg').className='tab-btn active-prog';g('tabBtnCurs').className='tab-btn';g('tabBtnTalent').className='tab-btn';}
-function showTabCurs(){g('tabCurs').classList.add('active');g('tabProg').classList.remove('active');g('tabTalent').classList.remove('active');g('tabBtnCurs').className='tab-btn active-curs';g('tabBtnProg').className='tab-btn';g('tabBtnTalent').className='tab-btn';}
-function showTabTalent(){g('tabTalent').classList.add('active');g('tabProg').classList.remove('active');g('tabCurs').classList.remove('active');g('tabBtnTalent').className='tab-btn active-talent';g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';
-  // Always show Próximamente
+function showTabProg(){
+  ['tabTalent','tabProg','tabCurs','tabInforme'].forEach(function(id){
+    var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}
+  });
+  var el=g('tabProg');if(el){el.classList.add('active');el.style.display='block';}
+  g('tabBtnProg').className='tab-btn active-prog';g('tabBtnCurs').className='tab-btn';
+  if(g('tabBtnTalent'))g('tabBtnTalent').className='tab-btn';if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn';
+}
+function showTabCurs(){
+  ['tabTalent','tabProg','tabCurs','tabInforme'].forEach(function(id){
+    var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}
+  });
+  var el=g('tabCurs');if(el){el.classList.add('active');el.style.display='block';}
+  g('tabBtnCurs').className='tab-btn active-curs';g('tabBtnProg').className='tab-btn';
+  if(g('tabBtnTalent'))g('tabBtnTalent').className='tab-btn';if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn';
+}
+function showTabTalent(){
+  ['tabTalent','tabProg','tabCurs','tabInforme'].forEach(function(id){
+    var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}
+  });
+  var el=g('tabTalent');if(el){el.classList.add('active');el.style.display='block';}
+  g('tabBtnTalent').className='tab-btn active-talent';
+  g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';
+  if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn';
   if(g('tNoData'))g('tNoData').style.display='block';if(g('tMain'))g('tMain').style.display='none';
+}
+function showTabInforme(){
+  ['tabTalent','tabProg','tabCurs','tabInforme'].forEach(function(id){
+    var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}
+  });
+  var el=g('tabInforme');if(el){el.classList.add('active');el.style.display='block';}
+  if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn active-informe';
+  g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';
+  if(g('tabBtnTalent'))g('tabBtnTalent').className='tab-btn';
+  renderInforme();
 }
 function refreshTabProg(){
   if(P.raw.length>0){
@@ -1056,7 +1131,7 @@ function readExcel(file,isProg,cb){
       // Save to Supabase (shared with all users) — async
       g('loadingText').textContent = 'Guardando en la nube...';
       sbSave(isProg, mapped, meta, function(err){
-        if(err) console.warn('[Supabase] Save error:', err);
+        if(err) // save error suppressed
         cb();
       });
     }catch(err){
@@ -1984,6 +2059,177 @@ function readExcelRaw(file,cb){
   };
   reader.onerror=function(){g('loadingOverlay').style.display='none';alert('Error leyendo el archivo.');cb([]);};
   isCSV?reader.readAsText(file,'UTF-8'):reader.readAsArrayBuffer(file);
+}
+
+// ============================================================
+// INFORME MENSUAL
+// ============================================================
+function getMonthName(m){
+  return ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m];
+}
+
+function buildMonthOptions(){
+  var sel=g('infMonthSel');if(!sel)return;
+  // Get all unique year-month from fechaContrDate
+  var months={};
+  P.raw.forEach(function(r){
+    if(r.fechaContrDate){
+      var y=r.fechaContrDate.getFullYear(),m=r.fechaContrDate.getMonth();
+      var key=y+'-'+String(m+1).padStart(2,'0');
+      months[key]={y:y,m:m,label:getMonthName(m)+' '+y};
+    }
+  });
+  var sorted=Object.keys(months).sort().reverse();
+  // Rebuild options
+  sel.innerHTML='<option value="all">Todo el período</option>';
+  sorted.slice(0,24).forEach(function(k){
+    var opt=document.createElement('option');
+    opt.value=k;opt.textContent=months[k].label;
+    sel.appendChild(opt);
+  });
+}
+
+function getInformeData(){
+  var sel=g('infMonthSel');
+  var period=sel?sel.value:'all';
+  var progData=P.raw.filter(function(r){
+    // Filter by onboarding-related programs (or all if no period filter)
+    if(period==='all')return true;
+    var parts=period.split('-');
+    var y=parseInt(parts[0]),m=parseInt(parts[1])-1;
+    return r.fechaContrDate&&r.fechaContrDate.getFullYear()===y&&r.fechaContrDate.getMonth()===m;
+  });
+  var cursData=C.raw.filter(function(r){
+    if(period==='all')return true;
+    var parts=period.split('-');
+    var y=parseInt(parts[0]),m=parseInt(parts[1])-1;
+    // Use curso date if available, otherwise include all
+    return true;
+  });
+  return{prog:progData,curs:cursData,period:period};
+}
+
+function calcPct(data, filterFn){
+  var sub=filterFn?data.filter(filterFn):data;
+  if(!sub.length)return{pct:0,comp:0,total:0};
+  var comp=sub.filter(function(r){return r.estado==='Completado';}).length;
+  return{pct:Math.round(comp/sub.length*100),comp:comp,total:sub.length};
+}
+
+function infKpiHTML(val,lbl,sub,cls){
+  cls=cls||'';
+  return '<div class="inf-kpi '+cls+'"><div class="inf-kpi-val">'+val+'</div><div class="inf-kpi-lbl">'+lbl+'</div>'+(sub?'<div class="inf-kpi-sub">'+sub+'</div>':'')+'</div>';
+}
+
+function infCountryHTML(country, pct, comp, total, color){
+  color=color||'#AE90C3';
+  var barColor=pct>=70?'#22a06b':pct>=50?'#F5A874':'#E97132';
+  return '<div class="inf-country-card" style="border-top-color:'+color+'">'+
+    '<div class="inf-country-name">'+country+'</div>'+
+    '<div class="inf-country-pct">'+pct+'%</div>'+
+    '<div class="inf-country-bar"><div class="inf-country-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'+
+    '<div class="inf-country-detail">'+comp+' completaron de '+total+'</div>'+
+    '</div>';
+}
+
+function renderInforme(){
+  if(!P.raw.length&&!C.raw.length){
+    if(g('infNoData'))g('infNoData').style.display='block';
+    if(g('infMain'))g('infMain').style.display='none';
+    return;
+  }
+  if(g('infNoData'))g('infNoData').style.display='none';
+  if(g('infMain'))g('infMain').style.display='block';
+
+  buildMonthOptions();
+  var d=getInformeData();
+  var now=new Date();
+  var period=d.period==='all'?'Acumulado total':'Período: '+g('infMonthSel').options[g('infMonthSel').selectedIndex].text;
+  if(g('infPeriod'))g('infPeriod').textContent=period;
+
+  // Ingresos del mes (new hires by fechaContrDate in selected period)
+  var ingresos=0;
+  if(d.period!=='all'){
+    var parts=d.period.split('-');
+    var fy=parseInt(parts[0]),fm=parseInt(parts[1])-1;
+    var legajosIngreso=new Set();
+    P.raw.forEach(function(r){
+      if(r.fechaContrDate&&r.fechaContrDate.getFullYear()===fy&&r.fechaContrDate.getMonth()===fm)
+        legajosIngreso.add(r.legajo);
+    });
+    ingresos=legajosIngreso.size;
+    if(g('infIngresosMes'))g('infIngresosMes').textContent=ingresos+' ingresos en el período';
+  }else{
+    if(g('infIngresosMes'))g('infIngresosMes').textContent='';
+  }
+
+  var COUNTRIES=['ARGENTINA','CHILE','MEXICO','PERU'];
+  var countryColors={'ARGENTINA':'#2196F3','CHILE':'#22a06b','MEXICO':'#F59E0B','PERU':'#AE90C3'};
+
+  // ── ONBOARDING ──────────────────────────────────────────────
+  var onbData=d.prog.filter(function(r){return r.programa&&r.programa.toUpperCase().indexOf('ONBOARDING')>=0;});
+  var onbGlobal=calcPct(onbData);
+  var onbLegajosComp=new Set();
+  onbData.filter(function(r){return r.estado==='Completado';}).forEach(function(r){onbLegajosComp.add(r.legajo);});
+  var onbUsers=new Set(onbData.map(function(r){return r.legajo;})).size;
+
+  var onbKpis='';
+  onbKpis+=infKpiHTML(onbGlobal.pct+'%','% Acumulado',onbGlobal.comp+' completaron de '+onbGlobal.total,'');
+  onbKpis+=infKpiHTML(onbLegajosComp.size,'Colaboradores que completaron','Único por legajo','purple');
+  if(ingresos>0)onbKpis+=infKpiHTML(ingresos,'Ingresos del período','Nuevos colaboradores','green');
+  if(g('infOnbKpis'))g('infOnbKpis').innerHTML=onbKpis;
+
+  var onbCountries='';
+  COUNTRIES.forEach(function(c){
+    var sub=onbData.filter(function(r){return r.pais===c;});
+    if(!sub.length)return;
+    var k=calcPct(sub);
+    onbCountries+=infCountryHTML(c,k.pct,k.comp,k.total,countryColors[c]);
+  });
+  if(g('infOnbCountries'))g('infOnbCountries').innerHTML=onbCountries||'<div style="color:#bbb;font-size:.82rem">Sin datos de Onboarding</div>';
+
+  // ── CX EXPERT ───────────────────────────────────────────────
+  var cxData=d.prog.filter(function(r){return r.programa&&r.programa.toUpperCase().indexOf('CX')>=0&&r.programa.toUpperCase().indexOf('EXPERT')>=0;});
+  var cxGlobal=calcPct(cxData);
+  var cxComp=new Set();
+  cxData.filter(function(r){return r.estado==='Completado';}).forEach(function(r){cxComp.add(r.legajo);});
+
+  var cxKpis='';
+  cxKpis+=infKpiHTML(cxGlobal.pct+'%','% Cumplimiento Global',cxGlobal.comp+' completaron de '+cxGlobal.total,'purple');
+  cxKpis+=infKpiHTML(cxComp.size,'Colaboradores que completaron','Único por legajo','');
+  if(g('infCxKpis'))g('infCxKpis').innerHTML=cxKpis||'<div style="color:#bbb;font-size:.82rem">Sin datos de CX Expert</div>';
+
+  var cxCountries='';
+  COUNTRIES.forEach(function(c){
+    var sub=cxData.filter(function(r){return r.pais===c;});
+    if(!sub.length)return;
+    var k=calcPct(sub);
+    cxCountries+=infCountryHTML(c,k.pct,k.comp,k.total,countryColors[c]);
+  });
+  if(g('infCxCountries'))g('infCxCountries').innerHTML=cxCountries||'<div style="color:#bbb;font-size:.82rem">Sin datos de CX Expert</div>';
+
+  // ── CURSOS ──────────────────────────────────────────────────
+  var cursAll=C.raw;
+  var cursUsers=new Set(cursAll.map(function(r){return r.legajo;})).size;
+  var cursComp=new Set(cursAll.filter(function(r){return r.estado==='Completado';}).map(function(r){return r.legajo;})).size;
+  var cursUniq=new Set(cursAll.map(function(r){return r.curso;})).size;
+  var cursAvg=cursAll.length?Math.round(cursAll.reduce(function(s,r){return s+r.progreso;},0)/cursAll.length):0;
+
+  var cursKpis='';
+  cursKpis+=infKpiHTML(cursUniq,'Cursos activos','','green');
+  cursKpis+=infKpiHTML(cursUsers,'Colaboradores con cursos','','');
+  cursKpis+=infKpiHTML(cursComp,'Completaron al menos 1','','purple');
+  cursKpis+=infKpiHTML(cursAvg+'%','Progreso promedio','','yellow');
+  if(g('infCursKpis'))g('infCursKpis').innerHTML=cursKpis;
+
+  var cursCountries='';
+  COUNTRIES.forEach(function(c){
+    var sub=cursAll.filter(function(r){return r.pais===c;});
+    if(!sub.length)return;
+    var k=calcPct(sub);
+    cursCountries+=infCountryHTML(c,k.pct,k.comp,k.total,countryColors[c]);
+  });
+  if(g('infCursCountries'))g('infCursCountries').innerHTML=cursCountries||'<div style="color:#bbb;font-size:.82rem">Sin datos de Cursos</div>';
 }
 
 document.addEventListener('DOMContentLoaded',function(){
