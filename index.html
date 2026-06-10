@@ -2666,6 +2666,14 @@ function renderInforme(){
 
 
 document.addEventListener('DOMContentLoaded',function(){
+  // Cache version check — clear if outdated format
+  var CACHE_VERSION = '3';
+  if(localStorage.getItem('xtc_cache_v') !== CACHE_VERSION){
+    ['xtc_sb_prog','xtc_sb_curs','xtc_prog_data','xtc_curs_data'].forEach(function(k){
+      localStorage.removeItem(k);
+    });
+    localStorage.setItem('xtc_cache_v', CACHE_VERSION);
+  }
   // Auth
   g('btnLogin').addEventListener('click',doLogin);
   g('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
