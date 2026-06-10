@@ -651,11 +651,11 @@ var SB_HDRS   = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type'
 
 // ── Compact rows to arrays (saves ~60% bandwidth) ──────────
 function compactRow(r,isProg){
-  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto,r.fechaContr,r.nombre,r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0,r.fechaFinDate?r.fechaFinDate.getTime():0];
+  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto&&r.depto.length>40?r.depto.substring(0,40):r.depto,r.nombre,r.posicion&&r.posicion.length>60?r.posicion.substring(0,60):r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0,r.fechaFinDate?r.fechaFinDate.getTime():0];
   return [r.curso,r.legajo,r.pais,r.segmento,r.depto,r.nombre,r.posicion,r.estado,r.progreso,r.fechaFin,r.distrito,r.region,r.calificacion,r.categoria];
 }
 function expandRow(a,isProg){
-  if(isProg){var ts=a[12],tsf=a[13];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],fechaContr:a[5],nombre:a[6],posicion:a[7],progreso:a[8],estado:a[9],distrito:a[10],region:a[11],fechaContrDate:ts?new Date(ts):null,fechaFinDate:tsf?new Date(tsf):null,primerAcceso:''}}
+  if(isProg){var ts=a[11],tsf=a[12];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],progreso:a[7],estado:a[8],distrito:a[9],region:a[10],fechaContrDate:ts?new Date(ts):null,fechaFinDate:tsf?new Date(tsf):null,fechaContr:ts?new Date(ts).toLocaleDateString('es-AR'):'',primerAcceso:''}}
   return{curso:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],estado:a[7],progreso:a[8],fechaFin:a[9],distrito:a[10],region:a[11],calificacion:a[12],categoria:a[13]};
 }
 
@@ -676,30 +676,35 @@ function sbSave(isProg, allData, meta, onDone){
   var table   = isProg ? 'programas_data' : 'cursos_data';
   var compact = allData.map(function(r){ return compactRow(r, isProg); });
   var infoEl  = g(isProg ? 'dpLoadTime' : 'dcLoadTime');
+  var lsKey   = isProg ? 'xtc_sb_prog' : 'xtc_sb_curs';
 
-  function finish(ok){
-    if(ok){
-      // save ok
-      if(infoEl) infoEl.textContent = meta.loadTime + ' \u2713 guardado en la nube';
-      try{ localStorage.setItem(isProg?'xtc_sb_prog':'xtc_sb_curs', JSON.stringify({rows:compact,meta:meta})); }catch(e){}
-      if(onDone) onDone(null);
-    }else{
-      if(infoEl) infoEl.textContent = meta.loadTime + ' \u26a0 error al guardar';
-      if(onDone) onDone('error');
-    }
+  // Always save to localStorage first (instant)
+  try{
+    localStorage.setItem(lsKey, JSON.stringify({rows:compact,meta:meta}));
+  }catch(e){}
+
+  // Check payload size — skip Supabase if too large (>800KB)
+  var payload = JSON.stringify({rows:compact, meta:meta, updated_at:new Date().toISOString()});
+  var sizeKB = Math.round(payload.length / 1024);
+
+  if(sizeKB > 1500){
+    // Too large for Supabase free tier — use localStorage only
+    if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado localmente';
+    if(onDone) onDone(null);
+    return;
   }
 
-  // Step 1: DELETE all existing rows
+  if(infoEl) infoEl.textContent = meta.loadTime + ' ⏳ sincronizando...';
+
+  // Upload to Supabase in background
   sbRequest('DELETE', SB_URL+'/rest/v1/'+table+'?id=gte.0', null, {'Prefer':'return=minimal'}, function(s1){
-    // Step 2: INSERT new row (ignore delete errors, table might be empty)
-    var row = { rows: compact, meta: meta, updated_at: new Date().toISOString() };
-    sbRequest('POST', SB_URL+'/rest/v1/'+table, row, {'Prefer':'return=minimal'}, function(s2, body2){
+    sbRequest('POST', SB_URL+'/rest/v1/'+table, JSON.parse(payload), {'Prefer':'return=minimal'}, function(s2){
       if(s2 >= 200 && s2 < 300){
-        finish(true);
+        if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado';
       }else{
-        // suppressed
-        finish(false);
+        if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado localmente';
       }
+      if(onDone) onDone(null);
     });
   });
 }
@@ -1137,6 +1142,7 @@ function applyUploads(){
 }
 function processQueue(queue,idx){
   if(idx>=queue.length){
+    // Hide loading immediately — don't wait for Supabase sync
     g('loadingOverlay').style.display='none';
     refreshTabProg();refreshTabCurs();
     // Process talent if pending
