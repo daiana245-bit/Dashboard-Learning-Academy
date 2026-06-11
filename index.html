@@ -683,100 +683,121 @@ function sbRequest(method, url, payload, headers, cb){
 }
 
 function sbSave(isProg, allData, meta, onDone){
-  var fileName = isProg ? 'programas.json' : 'cursos.json';
-  var compact  = allData.map(function(r){ return compactRow(r, isProg); });
-  var lsKey    = isProg ? 'xtc_sb_prog' : 'xtc_sb_curs';
-  var infoEl   = g(isProg ? 'dpLoadTime' : 'dcLoadTime');
+  var lsKey = isProg ? 'xtc_sb_prog' : 'xtc_sb_curs';
+  var infoEl = g(isProg ? 'dpLoadTime' : 'dcLoadTime');
+  var compact = allData.map(function(r){ return compactRow(r, isProg); });
 
-  // Always save to localStorage first (instant)
-  var payload = JSON.stringify({rows:compact, meta:meta});
-  try{ localStorage.setItem(lsKey, payload); }catch(e){}
+  // Save to localStorage immediately
+  try{
+    localStorage.setItem(lsKey, JSON.stringify({rows:compact, meta:meta}));
+  }catch(e){}
 
-  // Upload to Supabase Storage
-  if(infoEl) infoEl.textContent = meta.loadTime + ' ⏳ sincronizando...';
+  // Upload to Supabase Storage in chunks
+  var CHUNK = 2000;
+  var chunks = [];
+  for(var i=0; i<compact.length; i+=CHUNK){
+    chunks.push(compact.slice(i, i+CHUNK));
+  }
 
-  var uploadUrl = SB_URL + '/storage/v1/object/' + 'dashboard-files/' + fileName;
+  var fileName = (isProg ? 'programas' : 'cursos');
+  var uploaded = 0;
+  var failed = false;
+
+  // Upload meta file first
+  var metaPayload = JSON.stringify({meta:meta, totalChunks:chunks.length, totalRows:compact.length});
+  uploadToStorage(fileName+'_meta.json', metaPayload, function(ok){
+    if(!ok){ if(infoEl) infoEl.textContent = meta.loadTime+' ✓ local'; if(onDone) onDone(null); return; }
+    // Upload each chunk
+    function uploadChunk(idx){
+      if(idx >= chunks.length){
+        if(infoEl) infoEl.textContent = meta.loadTime+' ✓ guardado';
+        if(onDone) onDone(null);
+        return;
+      }
+      var payload = JSON.stringify({chunk:idx, rows:chunks[idx]});
+      uploadToStorage(fileName+'_chunk_'+idx+'.json', payload, function(ok){
+        if(ok){ uploadChunk(idx+1); }
+        else{ if(infoEl) infoEl.textContent = meta.loadTime+' ✓ local'; if(onDone) onDone(null); }
+      });
+    }
+    uploadChunk(0);
+  });
+}
+
+function uploadToStorage(fileName, payload, cb){
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', uploadUrl);
+  xhr.open('POST', SB_URL+'/storage/v1/object/dashboard-files/'+fileName);
   xhr.setRequestHeader('apikey', SB_KEY);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + SB_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer '+SB_KEY);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('x-upsert', 'true');
   xhr.timeout = 30000;
-
-  // Safety timer: show local after 35s
-  var safetyTimer = setTimeout(function(){
-    if(infoEl && infoEl.textContent.indexOf('sincronizando') >= 0)
-      infoEl.textContent = meta.loadTime + ' ✓ guardado localmente';
-    if(onDone){ onDone(null); onDone = null; }
-  }, 35000);
-
-  xhr.onload = function(){
-    clearTimeout(safetyTimer);
-    if(xhr.status >= 200 && xhr.status < 300){
-      if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado';
-    }else{
-      if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado localmente';
-    }
-    if(onDone){ onDone(null); onDone = null; }
-  };
-  xhr.onerror = xhr.ontimeout = function(){
-    clearTimeout(safetyTimer);
-    if(infoEl) infoEl.textContent = meta.loadTime + ' ✓ guardado localmente';
-    if(onDone){ onDone(null); onDone = null; }
-  };
+  xhr.onload = function(){ cb(xhr.status >= 200 && xhr.status < 300); };
+  xhr.onerror = xhr.ontimeout = function(){ cb(false); };
   xhr.send(payload);
 }
 
 function sbLoad(isProg, onDone){
-  var fileName = isProg ? 'programas.json' : 'cursos.json';
-  var lsKey    = isProg ? 'xtc_sb_prog' : 'xtc_sb_curs';
+  var lsKey = isProg ? 'xtc_sb_prog' : 'xtc_sb_curs';
+  var fileName = isProg ? 'programas' : 'cursos';
 
-  // Try Storage first
-  var downloadUrl = SB_URL + '/storage/v1/object/public/dashboard-files/' + fileName;
+  // Try Storage first - read meta to know how many chunks
+  var metaUrl = SB_URL+'/storage/v1/object/public/dashboard-files/'+fileName+'_meta.json?t='+Date.now();
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', downloadUrl + '?t=' + Date.now()); // cache bust
-  xhr.timeout = 20000;
+  xhr.open('GET', metaUrl);
+  xhr.timeout = 15000;
   xhr.onload = function(){
     if(xhr.status === 200){
       try{
-        var parsed = JSON.parse(xhr.responseText);
-        if(parsed && parsed.rows && parsed.rows.length){
-          // Update localStorage with fresh data from Storage
-          try{ localStorage.setItem(lsKey, xhr.responseText); }catch(e){}
-          onDone(200, null, parsed);
-          return;
+        var metaInfo = JSON.parse(xhr.responseText);
+        var totalChunks = metaInfo.totalChunks || 0;
+        var meta = metaInfo.meta || {};
+        if(totalChunks === 0){ fallbackToLS(); return; }
+        // Load all chunks
+        var allRows = [];
+        var loaded = 0;
+        function loadChunk(idx){
+          if(idx >= totalChunks){
+            // All chunks loaded
+            try{ localStorage.setItem(lsKey, JSON.stringify({rows:allRows, meta:meta})); }catch(e){}
+            onDone(200, null, {rows:allRows, meta:meta});
+            return;
+          }
+          var chunkUrl = SB_URL+'/storage/v1/object/public/dashboard-files/'+fileName+'_chunk_'+idx+'.json?t='+Date.now();
+          var xhrC = new XMLHttpRequest();
+          xhrC.open('GET', chunkUrl);
+          xhrC.timeout = 15000;
+          xhrC.onload = function(){
+            if(xhrC.status === 200){
+              try{
+                var chunk = JSON.parse(xhrC.responseText);
+                allRows = allRows.concat(chunk.rows || []);
+                loadChunk(idx+1);
+              }catch(e){ fallbackToLS(); }
+            }else{ fallbackToLS(); }
+          };
+          xhrC.onerror = xhrC.ontimeout = function(){ fallbackToLS(); };
+          xhrC.send();
         }
-      }catch(e){}
-    }
-    // Fallback to localStorage
-    try{
-      var raw = localStorage.getItem(lsKey);
-      if(raw){
-        var cached = JSON.parse(raw);
-        if(cached && cached.rows && cached.rows.length){
-          onDone(200, null, cached);
-          return;
-        }
-      }
-    }catch(e){}
-    onDone(0, null, {});
+        loadChunk(0);
+      }catch(e){ fallbackToLS(); }
+    }else{ fallbackToLS(); }
   };
-  xhr.onerror = xhr.ontimeout = function(){
-    // Fallback to localStorage
-    try{
-      var raw = localStorage.getItem(lsKey);
-      if(raw){
-        var cached = JSON.parse(raw);
-        if(cached && cached.rows && cached.rows.length){
-          onDone(200, null, cached);
-          return;
-        }
-      }
-    }catch(e){}
-    onDone(0, null, {});
-  };
+  xhr.onerror = xhr.ontimeout = function(){ fallbackToLS(); };
   xhr.send();
+
+  function fallbackToLS(){
+    try{
+      var raw = localStorage.getItem(lsKey);
+      if(raw){
+        var cached = JSON.parse(raw);
+        if(cached && cached.rows && cached.rows.length){
+          onDone(200, null, cached); return;
+        }
+      }
+    }catch(e){}
+    onDone(0, null, {});
+  }
 }
 
 function restoreData(isProg, onDone){
