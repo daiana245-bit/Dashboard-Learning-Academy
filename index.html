@@ -809,6 +809,38 @@ function clearAllStoredData(){
 }
 
 // ── Storage info for modal ──────────────────────────────────
+function applyData(isProg, rows, meta){
+  var filtered = CF ? rows.filter(function(r){return CF.indexOf(r.pais)>=0;}) : rows;
+  if(isProg){
+    P.raw = filtered;
+    if(!pHasFilters()){P.fSel={};P.cfg.forEach(function(f){P.fSel[f.id]={};});}
+    var infoEl = g('dpFileName');
+    if(infoEl) infoEl.textContent = meta.fileName||'';
+    var rcEl = g('dpRowCount');
+    if(rcEl) rcEl.textContent = filtered.length.toLocaleString();
+    var ltEl = g('dpLoadTime');
+    if(ltEl) ltEl.textContent = meta.loadTime||'';
+    var dib = g('dibProg'); if(dib) dib.style.display='flex';
+    // Show correct info based on role
+    var isGlobal=(CU==='global');
+    var gEl=g('dibProgGlobal'); if(gEl) gEl.style.display=isGlobal?'':'none';
+    var cEl=g('dibProgCountry'); if(cEl) cEl.style.display=isGlobal?'none':'';
+  } else {
+    C.raw = filtered;
+    if(!cHasFilters()){C.fSel={};C.cfg.forEach(function(f){C.fSel[f.id]={};});}
+    var infoEl2 = g('dcFileName');
+    if(infoEl2) infoEl2.textContent = meta.fileName||'';
+    var rcEl2 = g('dcRowCount');
+    if(rcEl2) rcEl2.textContent = filtered.length.toLocaleString();
+    var ltEl2 = g('dcLoadTime');
+    if(ltEl2) ltEl2.textContent = meta.loadTime||'';
+    var dib2 = g('dibCurs'); if(dib2) dib2.style.display='flex';
+    var isGlobal2=(CU==='global');
+    var gEl2=g('dibCursGlobal'); if(gEl2) gEl2.style.display=isGlobal2?'':'none';
+    var cEl2=g('dibCursCountry'); if(cEl2) cEl2.style.display=isGlobal2?'none':'';
+  }
+}
+
 function lsCacheLoad(isProg){
   try{
     var key=isProg?'xtc_sb_prog':'xtc_sb_curs';
@@ -819,14 +851,6 @@ function lsCacheLoad(isProg){
   }catch(e){return null;}
 }
 
-function lsCacheLoad(isProg){
-  try{
-    var key=isProg?'xtc_sb_prog':'xtc_sb_curs';
-    var raw=localStorage.getItem(key);
-    if(!raw)return null;
-    return JSON.parse(raw);
-  }catch(e){return null;}
-}
 function getStorageInfo(){
   var cP=lsCacheLoad(true),cC=lsCacheLoad(false);
   var info='';
