@@ -1257,12 +1257,10 @@ function readExcel(file,isProg,cb){
       var meta = { fileName: file.name, loadTime: loadTime, rowCount: mapped.length };
       // Apply to local state immediately
       applyData(isProg, mapped, meta);
-      // Save to Supabase (shared with all users) — async
-      g('loadingText').textContent = 'Guardando en la nube...';
-      sbSave(isProg, mapped, meta, function(err){
-        if(err) // save error suppressed
-        cb();
-      });
+      // Call cb() immediately — don't wait for cloud sync
+      cb();
+      // Save to cloud in background (non-blocking)
+      sbSave(isProg, mapped, meta, function(){});
     }catch(err){
       g('loadingOverlay').style.display='none';
       console.error(err);
