@@ -667,8 +667,9 @@ function sbLoad(isProg, onDone){
 function restoreData(isProg, onDone){
   // 1. Show cache instantly
   var cached=lsCacheLoad(isProg);
-  if(cached&&cached.data&&cached.data.length){
-    applyData(isProg,cached.data,cached.meta);
+  if(cached&&cached.rows&&cached.rows.length){
+    var cachedRows=cached.rows.map(function(r){return expandRow(r,isProg);});
+    applyData(isProg,cachedRows,cached.meta||{});
     if(isProg)refreshTabProg();else refreshTabCurs();
   }
   // 2. Fetch fresh from Supabase in background
