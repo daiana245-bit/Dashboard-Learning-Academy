@@ -301,8 +301,6 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
   <div class="tab-nav">
     <button class="tab-btn active-prog" id="tabBtnProg">Programas</button>
     <button class="tab-btn" id="tabBtnCurs">Cursos</button>
-    <button class="tab-btn" id="tabBtnTalent">Talent Mapping</button>
-    <button class="tab-btn" id="tabBtnInforme">Informe Mensual</button>
   </div>
   <!-- TAB PROGRAMAS -->
   <div class="tab-content active" id="tabProg">
@@ -430,143 +428,9 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
     </div>
   </div>
 
-<!-- TAB TALENT MAPPING -->
-<div class="tab-content" id="tabTalent">
-  <div id="tNoData" style="text-align:center;padding:80px 20px">
-    <div style="font-size:3.5rem;margin-bottom:16px">🚀</div>
-    <div style="font-size:1.5rem;font-weight:700;color:#22a06b;margin-bottom:10px">Próximamente</div>
-    <div style="font-size:.9rem;color:#bbb;max-width:400px;margin:0 auto;line-height:1.6">Esta sección estará disponible muy pronto.<br>Talent Mapping — cruce de datos de potencial con avance de programas.</div>
-  </div>
-  <div id="tMain" style="display:none">
-    <div class="talent-kpi-row">
-      <div class="talent-kpi"><div class="kpi-value" id="tKpiTotal">0</div><div class="kpi-label">Talentos Alto Potencial</div></div>
-      <div class="talent-kpi"><div class="kpi-value" id="tKpiOnboarding">0%</div><div class="kpi-label">% con Onboarding Completo</div></div>
-      <div class="talent-kpi"><div class="kpi-value" id="tKpiAvgProg">0%</div><div class="kpi-label">Progreso Promedio</div></div>
-      <div class="talent-kpi"><div class="kpi-value" id="tKpiPending">0</div><div class="kpi-label">Sin datos en Programas</div></div>
-    </div>
-    <div class="table-section" style="margin:0 14px 14px">
-      <div class="table-controls" style="margin-bottom:12px">
-        <span style="font-weight:700;font-size:.95rem;color:#444">🎯 Talentos Alto Potencial</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="tSearch" class="table-search" placeholder="Buscar..." oninput="renderTalentTable()">
-          <button class="btn-export" onclick="exportTalent()" style="background:#22a06b">⬇ Exportar</button>
-        </div>
-      </div>
-      <div style="overflow-x:auto;max-height:600px;overflow-y:auto">
-        <table class="detail-table" id="tTable">
-          <thead><tr>
-            <th>Legajo</th><th>Nombre</th><th>Posición</th><th>Match Cultural</th>
-            <th>% Avance General</th><th>Estado Programas</th><th>Programas Pendientes</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="pagination" id="tPag"></div>
-    </div>
-  </div>
-</div>
 
-<!-- TAB INFORME MENSUAL -->
-<div class="tab-content" id="tabInforme">
-  <div id="infNoData" style="text-align:center;padding:80px 20px;color:#ccc">
-    <div style="font-size:2.5rem;margin-bottom:12px">📊</div>
-    <div style="font-weight:700;font-size:1rem;color:#bbb;margin-bottom:6px">Sin datos disponibles</div>
-    <div style="font-size:.82rem;margin-bottom:16px">Cargá los archivos de Programas y/o Cursos primero.</div>
-    <button class="inf-retry-btn" onclick="renderInforme()">🔄 Reintentar</button>
-  </div>
-  <div id="infMain" style="display:none">
-    <!-- Hero header -->
-    <div class="inf-hero">
-      <div class="inf-hero-eyebrow">Reporte de Formación · XTC</div>
-      <div class="inf-hero-title">Experience Training Center</div>
-      <div class="inf-hero-sub">TIENDAS GLOBAL</div>
-      <div class="inf-hero-meta">
-        <div class="inf-hero-pill" id="infPeriodPill">Acumulado 2026</div>
-        <div class="inf-hero-pill orange" id="infIngresosPill" style="display:none"></div>
-      </div>
-    </div>
-    <!-- Period selector -->
-    <div class="inf-period-sel">
-      <label>Ver período</label>
-      <select id="infMonthSel" onchange="renderInforme()">
-        <option value="all">Acumulado 2026</option>
-      </select>
-    </div>
-    <!-- EVOLUTIVO ONBOARDING -->
-    <div class="inf-evolutivo">
-      <div class="inf-evolutivo-title">📈 Evolutivo Onboarding — Ingresos activos 2026</div>
-      <div id="infEvChart" style="height:240px"></div>
-    </div>
-    <!-- ONBOARDING block -->
-    <div class="inf-block" id="infOnbBlock">
-      <div class="inf-block-header">
-        <div class="inf-block-title"><div class="inf-block-dot"></div><div class="inf-block-name">Onboarding Tiendas</div></div>
-        <div class="inf-block-pct" id="infOnbPct">—<span>% global</span></div>
-      </div>
-      <div style="font-size:.72rem;color:#aaa;margin-bottom:14px">📌 Ingresos activos 2026 — completitud dentro de los primeros 10 días</div>
-      <div class="inf-stats-row" id="infOnbStats"></div>
-      <div class="inf-countries" id="infOnbCountries"></div>
-    </div>
-    <!-- CX EXPERT block -->
-    <div class="inf-block" id="infCxBlock">
-      <div class="inf-block-header">
-        <div class="inf-block-title"><div class="inf-block-dot purple"></div><div class="inf-block-name">CX Expert</div></div>
-        <div class="inf-block-pct" id="infCxPct">—<span>% global</span></div>
-      </div>
-      <div class="inf-stats-row" id="infCxStats"></div>
-      <div class="inf-countries" id="infCxCountries"></div>
-      <!-- CX Evolutivo -->
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f5f5f5">
-        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#bbb;margin-bottom:10px">📈 Evolutivo mes a mes (fecha de finalización)</div>
-        <div id="infCxEvChart" style="height:200px"></div>
-      </div>
-    </div>
-    <!-- RECORRIDO block -->
-    <div class="inf-block" id="infRecBlock">
-      <div class="inf-block-header">
-        <div class="inf-block-title"><div class="inf-block-dot yellow"></div><div class="inf-block-name">🚀 Mi Recorrido de Aprendizaje</div></div>
-        <div class="inf-block-pct" id="infRecPct">—<span>% global</span></div>
-      </div>
-      <div style="font-size:.72rem;color:#aaa;margin-bottom:12px">Tiendas · Evolutivo mes a mes (fecha de finalización)</div>
-      <div id="infRecChart" style="height:200px"></div>
-    </div>
-    <!-- VM ACADEMY block -->
-    <div class="inf-block" id="infVmBlock">
-      <div class="inf-block-header">
-        <div class="inf-block-title">
-          <div class="inf-block-dot" style="background:#9D7FBA"></div>
-          <div class="inf-block-name">VM Academy</div>
-        </div>
-        <div style="background:#EFE7F4;color:#7E63A0;padding:3px 10px;border-radius:12px;font-size:.68rem;font-weight:700">EXCLUSIVO STAFF RETAIL</div>
-      </div>
-      <div id="infVmContent"></div>
-    </div>
-    <!-- XTC NEWS -->
-    <div class="inf-news-wrap" style="margin-bottom:14px">
-      <div class="inf-news-header">
-        <div class="inf-news-label">⚡ XTC NEWS</div>
-        <button class="inf-news-edit-btn" id="infNewsEditBtn" onclick="toggleNewsEditor()">✏️ Editar noticias</button>
-      </div>
-      <div class="inf-news-ticker-bar">
-        <div class="inf-news-ticker-track" id="infNewsTrack"></div>
-      </div>
-      <div class="inf-news-content">
-        <div class="inf-news-content-header">
-          <div class="inf-news-content-title">Novedades</div>
-        </div>
-        <div class="inf-news-list" id="infNewsList"></div>
-      </div>
-      <div class="inf-news-editor" id="infNewsEditor">
-        <div style="font-size:.72rem;color:#aaa;margin-bottom:6px">Una noticia por línea:</div>
-        <textarea id="infNewsText" placeholder="📅 Novedad del mes..."></textarea>
-        <div class="inf-news-editor-btns">
-          <button class="inf-news-save-btn" onclick="saveNews()">Guardar</button>
-          <button class="inf-news-cancel-btn" onclick="toggleNewsEditor()">Cancelar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div></div>
+
+</div>
 <script>
 // ============================================================
 // GLOBALS
@@ -1060,7 +924,7 @@ function showTabProg(){
   });
   var el=g('tabProg');if(el){el.classList.add('active');el.style.display='block';}
   g('tabBtnProg').className='tab-btn active-prog';g('tabBtnCurs').className='tab-btn';
-  if(g('tabBtnTalent'))g('tabBtnTalent').className='tab-btn';if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn';
+  
   setTimeout(function(){['pC1','pC2','pC3','pC4'].forEach(function(id){var el=document.getElementById(id);if(el&&el.data)Plotly.Plots.resize(el);});},50);
 }
 function showTabCurs(){
@@ -1069,7 +933,7 @@ function showTabCurs(){
   });
   var el=g('tabCurs');if(el){el.classList.add('active');el.style.display='block';}
   g('tabBtnCurs').className='tab-btn active-curs';g('tabBtnProg').className='tab-btn';
-  if(g('tabBtnTalent'))g('tabBtnTalent').className='tab-btn';if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn';
+  
   setTimeout(function(){['cC1','cC2','cC3','cC4'].forEach(function(id){var el=document.getElementById(id);if(el&&el.data)Plotly.Plots.resize(el);});},50);
 }
 function showTabTalent(){
@@ -1077,9 +941,7 @@ function showTabTalent(){
     var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}
   });
   var el=g('tabTalent');if(el){el.classList.add('active');el.style.display='block';}
-  g('tabBtnTalent').className='tab-btn active-talent';
   g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';
-  if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn';
   if(g('tNoData'))g('tNoData').style.display='block';if(g('tMain'))g('tMain').style.display='none';
 }
 function showTabInforme(){
@@ -1087,9 +949,7 @@ function showTabInforme(){
     var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}
   });
   var el=g('tabInforme');if(el){el.classList.add('active');el.style.display='block';}
-  if(g('tabBtnInforme'))g('tabBtnInforme').className='tab-btn active-informe';
   g('tabBtnProg').className='tab-btn';g('tabBtnCurs').className='tab-btn';
-  if(g('tabBtnTalent'))g('tabBtnTalent').className='tab-btn';
   renderInforme();
 }
 function refreshTabProg(){
@@ -2196,8 +2056,7 @@ function mkPag(divId,state,tp,renderFn){
 // ============================================================
 // WIRE EVENTS
 // ============================================================
-// ============================================================
-// TALENT MAPPING
+
 // ============================================================
 var T={raw:[],joined:[],page:1},T_PS=50;
 function mapTalentRow(headers,row){
@@ -2296,8 +2155,7 @@ function readExcelRaw(file,cb){
   isCSV?reader.readAsText(file,'UTF-8'):reader.readAsArrayBuffer(file);
 }
 
-// ============================================================
-// INFORME MENSUAL
+
 // ============================================================
 var INF_NEWS_KEY = 'xtc_news';
 var INF_SEL_PROGS_KEY = 'xtc_inf_progs';
@@ -2725,8 +2583,6 @@ document.addEventListener('DOMContentLoaded',function(){
       if(el&&el.data)Plotly.Plots.resize(el);
     });
   });
-  if(g('tabBtnTalent'))g('tabBtnTalent').addEventListener('click',showTabTalent);
-  if(g('tabBtnInforme'))g('tabBtnInforme').addEventListener('click',showTabInforme);
   // Modal
   g('btnManageData').addEventListener('click',openModal);
   g('btnCloseModal').addEventListener('click',closeModal);
