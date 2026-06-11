@@ -809,6 +809,16 @@ function clearAllStoredData(){
 }
 
 // ── Storage info for modal ──────────────────────────────────
+function lsCacheLoad(isProg){
+  try{
+    var key=isProg?'xtc_sb_prog':'xtc_sb_curs';
+    var raw=localStorage.getItem(key);
+    if(!raw)return null;
+    var parsed=JSON.parse(raw);
+    return parsed;
+  }catch(e){return null;}
+}
+
 function getStorageInfo(){
   var cP=lsCacheLoad(true),cC=lsCacheLoad(false);
   var info='';
