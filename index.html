@@ -672,16 +672,12 @@ function restoreData(isProg, onDone){
     applyData(isProg,cachedRows,cached.meta||{});
     if(isProg)refreshTabProg();else refreshTabCurs();
   }
-  // 2. Fetch fresh from Supabase in background
-  sbLoad(isProg,function(err,rows,meta){
-    if(!err&&rows&&rows.length){
-      applyData(isProg,rows,meta);
+  // 2. Fetch fresh from Supabase Storage
+  sbLoad(isProg,function(status, err, data){
+    if(status===200 && data && data.rows && data.rows.length){
+      var freshRows=data.rows.map(function(r){return expandRow(r,isProg);});
+      applyData(isProg,freshRows,data.meta||{});
       if(isProg)refreshTabProg();else refreshTabCurs();
-      // Supabase load ok
-    }else if(err==='no_data'){
-      // no data yet
-    }else{
-      // suppressed
     }
     if(onDone)onDone();
   });
@@ -906,13 +902,13 @@ function enterDash(){
   ['dibProgGlobal','dibCursGlobal'].forEach(function(id){var el=g(id);if(el)el.style.display=isGlobal?'':'none';});
   ['dibProgCountry','dibCursCountry'].forEach(function(id){var el=g(id);if(el)el.style.display=isGlobal?'none':'';});
   g('btnManageData').style.display=CU==='global'?'inline-block':'none';
-  // Restore data: show cache instantly, fetch fresh from GitHub in background
-  if(!P.raw.length) restoreData(true, null);
-  if(!C.raw.length) restoreData(false, null);
-  restoreTalent();
   initAllMS();
-  refreshTabProg();
-  refreshTabCurs();
+  restoreData(true, function(){
+    refreshTabProg();
+  });
+  restoreData(false, function(){
+    refreshTabCurs();
+  });
   showTabProg();
 }
 
