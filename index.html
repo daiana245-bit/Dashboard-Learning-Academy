@@ -796,8 +796,13 @@ function parseProgreso(v){
 function normSt(v){
   var t=String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(!t||t==='-')return 'No completado';
-  if(t==='completado'||t==='completo via rap'||t==='completed')return 'Completado';
-  if(t.indexOf('completado')>=0&&t.indexOf('no')<0&&t.indexOf('aun')<0)return 'Completado';
+  // English values
+  if(t==='complete'||t==='completed'||t==='complete via rpl')return 'Completado';
+  if(t==='not complete'||t==='not completed'||t==='in progress'||t==='not yet started')return 'No completado';
+  // Spanish values
+  if(t==='completado'||t==='completo via rpl'||t==='completar via rpl')return 'Completado';
+  if(t.indexOf('completado')>=0&&t.indexOf('no ')<0&&t.indexOf('aun')<0)return 'Completado';
+  if(t.indexOf('complete')>=0&&t.indexOf('not')<0&&t.indexOf('in progress')<0)return 'Completado';
   return 'No completado';
 }
 function hRgb(hex){var h=hex.replace('#',''),n=parseInt(h,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
@@ -814,22 +819,22 @@ function downloadCSV(csv,fn){var blob=new Blob(['\ufeff'+csv],{type:'text/csv;ch
 function mapProgRow(headers,row){
   var map={};for(var i=0;i<headers.length;i++)map[nH(headers[i])]=row[i]!==undefined&&row[i]!==null?String(row[i]):'';
   return{
-    programa:   gV(map,['Nombre del programa']),
+    programa:   gV(map,['Nombre del programa','Program Name']),
     legajo:     gV(map,['Legajo']),
     pais:       gV(map,['Unidad de negocio (Label)']),
     segmento:   gV(map,['Tipo de segmento']),
     depto:      gV(map,['Departamento (Label)']),
     fechaContr: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).txt,
     fechaContrDate: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).date,
-    nombre:     gV(map,['Nombre completo del usuario']),
-    posicion:   gV(map,['Nombre(s) de la(s) posicion(es) del usuario']),
-    primerAcceso: gV(map,['Primer Acceso del Usuario']),
+    nombre:     gV(map,['Nombre completo del usuario',"User's Fullname",'Fullname']),
+    posicion:   gV(map,['Nombre(s) de la(s) posicion(es) del usuario',"User's Position Name(s)",'Position']),
+    primerAcceso: gV(map,['Primer Acceso del Usuario','User First Access']),
     progreso:   parseProgreso(gV(map,['Progreso Programa (%)'])),
-    estado:     normSt(gV(map,['Estatus del Programa'])),
+    estado:     normSt(gV(map,['Estatus del Programa','Program Status'])),
     distrito:   gV(map,['Distrito']),
     region:     gV(map,['Region','Regi\u00f3n']),
-    fechaFin:   parseDate(gV(map,['Fecha de Finalizacion','Fecha de finalizacion','Fecha finalizacion','Completion Date','FechaFin'])).txt,
-    fechaFinDate: parseDate(gV(map,['Fecha de Finalizacion','Fecha de finalizacion','Fecha finalizacion','Completion Date','FechaFin'])).date
+    fechaFin:   parseDate(gV(map,['Fecha de Finalizacion','Fecha de finalizacion','Fecha finalizacion','Completion Date','FechaFin','Date Completed'])).txt,
+    fechaFinDate: parseDate(gV(map,['Fecha de Finalizacion','Fecha de finalizacion','Fecha finalizacion','Completion Date','FechaFin','Date Completed'])).date
   };
 }
 function mapCursRow(headers,row){
@@ -841,7 +846,7 @@ function mapCursRow(headers,row){
     pais:       gV(map,['Unidad de negocio (Label)']),
     segmento:   gV(map,['Tipo de segmento']),
     depto:      gV(map,['Departamento (Label)']),
-    nombre:     gV(map,['Nombre completo del usuario']),
+    nombre:     gV(map,['Nombre completo del usuario',"User's Fullname",'Fullname']),
     posicion:   gV(map,['Nombre de la Posicion al finalizar','Nombre de la Posici\u00f3n al finalizar']),
     estado:     normSt(gV(map,['Estatus de finalizacion','Estatus de finalizaci\u00f3n'])),
     progreso:   parseProgreso(gV(map,['Progreso'])),
@@ -1157,6 +1162,19 @@ function readExcel(file,isProg,cb){
         alert('El archivo '+file.name+' no tiene datos suficientes.\nVerifica que tenga encabezados y al menos una fila de datos.');
         cb();return;
       }
+      // Skip metadata rows: find first row that looks like a real header
+      // (has >3 non-empty cells and first cell doesn't start with 'This report')
+      var headerRowIdx=0;
+      for(var ri=0;ri<Math.min(10,rows.length);ri++){
+        var r0=rows[ri];
+        var nonEmpty=r0.filter(function(v){return v!==null&&v!==undefined&&String(v).trim()!=='';}).length;
+        var first=String(r0[0]||'').trim();
+        if(nonEmpty>=3&&first.indexOf('This report')<0&&first.indexOf('User Status')<0&&
+           first.indexOf('Program Status')<0&&first.indexOf('Program name')<0){
+          headerRowIdx=ri;break;
+        }
+      }
+      rows=rows.slice(headerRowIdx);
       var headers=rows[0];
       // Trim all header values
       headers=headers.map(function(h){return String(h||'').trim();});
