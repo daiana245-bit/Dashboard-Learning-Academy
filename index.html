@@ -434,14 +434,14 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         <div class="filter-grid">
           <div class="filter-group"><label>Programa</label><div id="pFPrograma" class="multi-select"></div></div>
           <div class="filter-group"><label>Pais / Unidad de Negocio</label><div id="pFPais" class="multi-select"></div></div>
-          <div class="filter-group"><label>Distrito</label><div id="pFDistrito" class="multi-select"></div></div>
+          <div class="filter-group" id="pFDistritoGroup"><label>Distrito</label><div id="pFDistrito" class="multi-select"></div></div>
           <div class="filter-group"><label>Departamento</label><div id="pFDepto" class="multi-select"></div></div>
           <div class="filter-group"><label>Nombre</label><div id="pFNombre" class="multi-select"></div></div>
         </div>
         <button id="pBtnMore" style="background:none;border:none;color:#E97132;font-weight:600;font-size:.82rem;cursor:pointer;margin-top:10px;display:flex;align-items:center;gap:4px"><span id="pMoreIcon">&#9660;</span> Ver mas filtros</button>
         <div class="secondary-filters" id="pSecFilters">
           <div class="filter-grid">
-            <div class="filter-group"><label>Region</label><div id="pFRegion" class="multi-select"></div></div>
+            <div class="filter-group" id="pFRegionGroup"><label>Region</label><div id="pFRegion" class="multi-select"></div></div>
             <div class="filter-group"><label>Segmento</label><div id="pFSegmento" class="multi-select"></div></div>
             <div class="filter-group"><label>Posicion</label><div id="pFPosicion" class="multi-select"></div></div>
             <div class="filter-group"><label>Legajo</label><div id="pFLegajo" class="multi-select"></div></div>
@@ -498,14 +498,14 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         <div class="filter-grid">
           <div class="filter-group"><label>Curso</label><div id="cFCurso" class="multi-select"></div></div>
           <div class="filter-group"><label>Pais / Unidad de Negocio</label><div id="cFPais" class="multi-select"></div></div>
-          <div class="filter-group"><label>Distrito</label><div id="cFDistrito" class="multi-select"></div></div>
+          <div class="filter-group" id="cFDistritoGroup"><label>Distrito</label><div id="cFDistrito" class="multi-select"></div></div>
           <div class="filter-group"><label>Departamento</label><div id="cFDepto" class="multi-select"></div></div>
           <div class="filter-group"><label>Nombre</label><div id="cFNombre" class="multi-select"></div></div>
         </div>
         <button id="cBtnMore" style="background:none;border:none;color:#AE90C3;font-weight:600;font-size:.82rem;cursor:pointer;margin-top:10px;display:flex;align-items:center;gap:4px"><span id="cMoreIcon">&#9660;</span> Ver mas filtros</button>
         <div class="secondary-filters" id="cSecFilters">
           <div class="filter-grid">
-            <div class="filter-group"><label>Region</label><div id="cFRegion" class="multi-select"></div></div>
+            <div class="filter-group" id="cFRegionGroup"><label>Region</label><div id="cFRegion" class="multi-select"></div></div>
             <div class="filter-group"><label>Segmento</label><div id="cFSegmento" class="multi-select"></div></div>
             <div class="filter-group"><label>Posicion</label><div id="cFPosicion" class="multi-select"></div></div>
             <div class="filter-group"><label>Legajo</label><div id="cFLegajo" class="multi-select"></div></div>
@@ -919,9 +919,16 @@ var LOGINS={
   'training.ar':{pass:'argentina123',cf:['ARGENTINA'],training:true,pais:'🇦🇷'},
   'training.cl':{pass:'chile123',cf:['CHILE'],training:true,pais:'🇨🇱'},
   'training.mx':{pass:'mexico123',cf:['MEXICO'],training:true,pais:'🇲🇽'},
-  'training.pe':{pass:'peru123',cf:['PERU'],training:true,pais:'🇵🇪'}
+  'training.pe':{pass:'peru123',cf:['PERU'],training:true,pais:'🇵🇪'},
+  // NUEVO (14-sep): login exclusivo para ver el segmento STAFF (personal de oficina/soporte),
+  // que hasta ahora quedaba fuera del alcance fijo (Correccion 11) porque ese alcance solo
+  // permitia STAFF RETAIL y los segmentos de tienda. Este usuario ve UNICAMENTE STAFF y
+  // STAFF RETAIL (segScope, ver passesAllowedScope), sin recorte por pais (cf:null, igual que
+  // Global) porque STAFF es transversal a los 4 paises. viewMode:'staff' oculta Distrito/Region
+  // (no aplican a STAFF) y las pestanas Recorrido/Formacion Analytics (ver enterDash()).
+  staff:{pass:'staff2026',cf:null,segScope:['STAFF','STAFF RETAIL'],viewMode:'staff'}
 };
-var USER_LABELS={global:'Global',argentina:'Argentina',chile:'Chile',mexico:'México',peru:'Perú','training.ar':'Training AR','training.cl':'Training CL','training.mx':'Training MX','training.pe':'Training PE'};
+var USER_LABELS={global:'Global',argentina:'Argentina',chile:'Chile',mexico:'México',peru:'Perú','training.ar':'Training AR','training.cl':'Training CL','training.mx':'Training MX','training.pe':'Training PE',staff:'Staff'};
 var BASE={orange:'#E97132',purple:'#AE90C3',yellow:'#F5F378'};
 var CF=null,CU=null,PS=50;
 var P_SORT={col:null,dir:0}; // col=field name, dir=0 none,1 asc,-1 desc
@@ -1290,10 +1297,17 @@ var ALLOWED_PAISES = ['ARGENTINA','MEXICO','CHILE','PERU'];
 var ALLOWED_SEGMENTOS = ['STAFF RETAIL','TIENDA ATELIER','TIENDA TMB','TIENDA TODOMODA','TIENDA ISADORA'];
 var ALLOWED_PAISES_N = ALLOWED_PAISES.map(normUpper);
 var ALLOWED_SEGMENTOS_N = ALLOWED_SEGMENTOS.map(normUpper);
+// NUEVO (14-sep): alcance de segmento POR LOGIN. Antes ALLOWED_SEGMENTOS_N era el mismo
+// para todos los usuarios (los 5 segmentos de tienda). El login "staff" necesita ver
+// exclusivamente STAFF y STAFF RETAIL (ver LOGINS.staff.segScope) — el resto de los logins
+// (incluido Global) no declaran segScope, asi que siguen usando exactamente la misma lista
+// de siempre (ALLOWED_SEGMENTOS_N) sin ningun cambio de comportamiento.
 function passesAllowedScope(r){
   var pais = normUpper(r.pais);
   var seg  = normUpper(r.segmento);
-  return ALLOWED_PAISES_N.indexOf(pais)>=0 && ALLOWED_SEGMENTOS_N.indexOf(seg)>=0;
+  if(ALLOWED_PAISES_N.indexOf(pais)<0) return false;
+  var loginScope = (typeof CU!=='undefined' && CU && LOGINS[CU] && LOGINS[CU].segScope) ? LOGINS[CU].segScope.map(normUpper) : ALLOWED_SEGMENTOS_N;
+  return loginScope.indexOf(seg)>=0;
 }
 // NUEVO (01-sep): boton de diagnostico "Ver sin alcance fijo", solo visible para el usuario
 // Global — el usuario reporto que 243 personas de agosto (sin errores de tipeo, dentro de lo
@@ -1718,6 +1732,25 @@ function enterDash(){
   ['dibProgCountry','dibCursCountry'].forEach(function(id){var el=g(id);if(el)el.style.display=isGlobal?'none':'';});
   g('btnManageData').style.display=CU==='global'?'inline-block':'none';
   g('btnScopeBypass').style.display=CU==='global'?'inline-block':'none';
+  // NUEVO (14-sep): vista acotada para el login "staff" (LOGINS.staff.viewMode==='staff') —
+  // Distrito/Region no existen para ese segmento (el corte de STAFF es por Departamento/subarea,
+  // dentro de una Division), y no hay Recorrido de Aprendizaje ni Seguimiento para STAFF
+  // (pidio verlo aislado, solo Programas, Cursos y Formacion Analytics). Se resetea explicitamente
+  // en ambos sentidos (mostrar/ocultar) porque es una SPA: si alguien entra como staff y despues,
+  // en la misma pestana del navegador, entra con otro usuario, estos elementos no deben quedar
+  // escondidos.
+  // Actualizacion (14-sep, confirmado por la usuaria): Formacion Analytics SI queda disponible
+  // para staff — sus bloques que dependen de Distrito (Analisis por Distrito, Evolucion por
+  // Departamento/Tienda, Ranking de Distritos) simplemente no se activan al no tener ese filtro
+  // poblado, sin romper nada; el resto del tab (Overview, Evolucion mensual, Comparacion de
+  // periodos, Evolucion por programa) funciona igual que para cualquier otro login.
+  var isStaffView = !!(LOGINS[CU] && LOGINS[CU].viewMode==='staff');
+  ['pFDistritoGroup','pFRegionGroup','cFDistritoGroup','cFRegionGroup'].forEach(function(id){
+    var el=g(id); if(el) el.style.display = isStaffView ? 'none' : '';
+  });
+  var rTabBtn=g('tabBtnRecorrido'); if(rTabBtn) rTabBtn.style.display = isStaffView ? 'none' : '';
+  var faTabBtn=g('tabBtnAnalytics'); if(faTabBtn) faTabBtn.style.display = '';
+  if(isStaffView){ var ganttTabBtn=g('tabBtnGantt'); if(ganttTabBtn) ganttTabBtn.style.display='none'; }
   initAllMS();
   restoreData(true, function(){
     refreshTabProg();
