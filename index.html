@@ -3,12 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- BSG (Corrección 24): fuerza fondo claro sin importar el modo oscuro del
+     sistema/navegador de quien abre la app — ver <meta color-scheme> + reglas
+     en :root/html/body más abajo. -->
+<meta name="color-scheme" content="light">
 <title>Global Training Dashboard XTC</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
+/* BSG (Corrección 24): fondo claro fijo — sin esto, un equipo con Windows/navegador
+   en modo oscuro invierte por su cuenta inputs/selects/scrollbar aunque el resto
+   de los colores estén bien, y deja franjas oscuras al hacer scroll si el fondo
+   solo está en body. */
+:root{color-scheme:light}
+html{background:#f8f9fa}
 body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#333}
 .login-bg{min-height:100vh;display:flex;background:#fff}
 .login-split{display:flex;width:100%;min-height:100vh}
@@ -319,9 +329,57 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
   .gantt-form-row{grid-template-columns:1fr}
   .gantt-search{width:100%}
 }
+
+/* ============================================================
+   BSG (Corrección 24) — botón flotante de ayuda/reporte + pie de página,
+   alineado al estándar de apps BSG (icono de soporte corporativo, un solo
+   botón flotante, panel que abre ENCIMA sin navegar, pie con marca/versión).
+   Colores tomados de la paleta ya existente del dashboard (naranja/violeta),
+   no de la paleta genérica del template, para no romper la identidad visual
+   actual pedida explícitamente por la usuaria.
+   ============================================================ */
+.bsg-fab{position:fixed;right:22px;bottom:22px;width:54px;height:54px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#E97132,#AE90C3);color:#fff;cursor:pointer;
+  box-shadow:0 10px 24px -6px rgba(174,113,50,.5);z-index:500;display:flex;align-items:center;justify-content:center}
+.bsg-fab:hover{transform:translateY(-1px)}
+.bsg-help-panel{position:fixed;right:22px;bottom:88px;width:320px;max-width:calc(100vw - 32px);background:#fff;
+  border:1px solid #eee;border-radius:14px;box-shadow:0 22px 44px -20px rgba(0,0,0,.35);overflow:hidden;z-index:500}
+.bsg-help-panel[hidden]{display:none}
+.bsg-help-head{background:linear-gradient(135deg,#E97132,#AE90C3);padding:12px 14px;color:#fff}
+.bsg-help-head div:first-child{font-size:.85rem;font-weight:700}
+.bsg-help-head div:last-child{font-size:.72rem;opacity:.9;margin-top:2px}
+.bsg-help-body{padding:14px;display:flex;flex-direction:column;gap:8px}
+.bsg-help-body a.bsg-help-action{display:flex;gap:10px;align-items:center;padding:10px 11px;border-radius:9px;
+  border:1px solid #eee;text-decoration:none;color:#333;font-size:.82rem;font-weight:600;transition:background .15s}
+.bsg-help-body a.bsg-help-action:hover{background:#f8f6fb}
+.bsg-help-ctx{padding:0 14px 12px;font-size:.68rem;color:#bbb;font-family:monospace}
+@media(max-width:768px){
+  .bsg-fab{right:16px;bottom:16px;width:52px;height:52px}
+  .bsg-help-panel{left:16px;right:16px;bottom:80px;width:auto}
+}
 </style>
 </head>
 <body>
+<!-- BSG (Corrección 24): ícono corporativo de "ayuda y reporte" (vincha con
+     globo de diálogo) — se define una vez y se reutiliza con <use> en el
+     botón flotante. Usa currentColor. No reemplazar por un emoji ni por un
+     ícono propio de esta app: es la marca compartida de soporte en todas
+     las apps de BSG. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ico-soporte" viewBox="0 0 32 32">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5.13 17.59A10.5 10.5 0 1 1 11.41 23.87"/>
+      <rect x="2.2" y="10.6" width="4.6" height="6.8" rx="2.3"/>
+      <rect x="23.2" y="10.6" width="4.6" height="6.8" rx="2.3"/>
+      <path d="M11.1 8h8.8a2.6 2.6 0 0 1 2.6 2.6v4.3a2.6 2.6 0 0 1-2.6 2.6h-5.3l-3.2 3.3v-3.3h-.3a2.6 2.6 0 0 1-2.6-2.6v-4.3A2.6 2.6 0 0 1 11.1 8z"/>
+      <path d="M4.5 17.8v3.9a3.6 3.6 0 0 0 3.6 3.6h3.4"/>
+    </g>
+    <circle cx="12.8" cy="12.75" r="1.05" fill="currentColor"/>
+    <circle cx="15.5" cy="12.75" r="1.05" fill="currentColor"/>
+    <circle cx="18.2" cy="12.75" r="1.05" fill="currentColor"/>
+    <circle cx="13.4" cy="25.3" r="1.9" fill="currentColor"/>
+  </symbol>
+</svg>
 <div id="loginScreen" class="login-bg">
   <div class="login-split">
     <div class="login-left-panel">
@@ -827,8 +885,8 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         </div>
         <div class="filter-grid">
           <div class="filter-group"><label>País / Unidad de Negocio</label><div id="aFPais" class="multi-select"></div></div>
-          <div class="filter-group"><label>Región</label><div id="aFRegion" class="multi-select"></div></div>
-          <div class="filter-group"><label>Distrito</label><div id="aFDistrito" class="multi-select"></div></div>
+          <div class="filter-group"><label id="aFRegionLabel">Región</label><div id="aFRegion" class="multi-select"></div></div>
+          <div class="filter-group"><label id="aFDistritoLabel">Distrito</label><div id="aFDistrito" class="multi-select"></div></div>
           <div class="filter-group"><label>Programa</label><div id="aFPrograma" class="multi-select"></div></div>
           <div class="filter-group"><label>Curso</label><div id="aFCurso" class="multi-select"></div></div>
         </div>
@@ -904,6 +962,39 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
   </div>
   <!-- ================= FIN TAB FORMACIÓN ANALYTICS ================= -->
 
+  <!-- BSG (Corrección 24): pie de página estándar — cierra toda app BSG, sin
+       excepción. Solo texto de marca/versión, no reemplaza nada existente. -->
+  <div style="text-align:center;padding:22px 0 4px;margin-top:24px;border-top:1px solid #eee">
+    <div style="font-size:.68rem;color:#bbb">
+      Desarrollado por
+      <span style="background:linear-gradient(90deg,#6366f1,#0ea5e9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:600">Blue Star Group · IA Lab</span>
+      · Learning Academy XTC · <span id="footerBuildInfo">Corrección 24 · 15/09/2026</span>
+    </div>
+  </div>
+
+  <!-- BSG (Corrección 24): botón flotante único de ayuda/reporte, con el ícono
+       corporativo de soporte definido arriba. Abre un panel ENCIMA de la
+       pantalla (no navega) — así no se pierde nada de lo que se estaba
+       haciendo (filtros, formularios). Por ahora solo ofrece "Reportar" vía
+       mailto con el contexto de la pantalla precargado: no hay bandeja de
+       solicitudes ni asistente todavía (alcance acordado con la usuaria —
+       ver claude/changelog_formacion_analytics.md, Corrección 24). -->
+  <button class="bsg-fab" id="bsgFab" aria-label="Ayuda y reporte" title="Ayuda y reporte">
+    <svg width="22" height="22" fill="none" style="color:#fff"><use href="#ico-soporte"/></svg>
+  </button>
+  <div class="bsg-help-panel" id="bsgHelpPanel" hidden>
+    <div class="bsg-help-head">
+      <div>¿Encontraste un error o tenés una sugerencia?</div>
+      <div>Sin salir de esta pantalla</div>
+    </div>
+    <div class="bsg-help-body">
+      <a class="bsg-help-action" id="bsgHelpReportLink" href="#" target="_blank" rel="noopener">
+        <span style="width:30px;height:30px;border-radius:8px;background:#FDE8DB;color:#A45F2B;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto">⚑</span>
+        <span>Reportar error o mejora<br><span style="font-weight:400;color:#999;font-size:.72rem">Se abre tu mail con el contexto ya cargado</span></span>
+      </a>
+    </div>
+    <div class="bsg-help-ctx" id="bsgHelpCtx">contexto: —</div>
+  </div>
 
 </div>
 <script>
@@ -1410,6 +1501,46 @@ function getStorageInfo(){
 }
 
 // ============================================================
+// BSG (Corrección 24) — botón flotante de ayuda/reporte (estándar de apps BSG)
+// ============================================================
+// NOTA (15-sep, Corrección 24): el estándar BSG pide una casilla de EQUIPO acá,
+// no el mail de una persona puntual (queda expuesto en el HTML público y deja
+// de servir si esa persona cambia de rol). La usuaria confirmó que hoy no
+// existe una casilla de equipo para este dashboard, así que se usa su mail
+// como solución temporal — reemplazar por la casilla de equipo apenas exista.
+var BSG_HELP_MAILTO = 'daiana.babolene@bsg.global';
+function bsgActiveTabName(){
+  var tabs=[['tabProg','Programas'],['tabCurs','Cursos'],['tabGantt','Seguimiento'],['tabRecorrido','Recorrido'],['tabAnalytics','Formación Analytics']];
+  for(var i=0;i<tabs.length;i++){
+    var el=document.getElementById(tabs[i][0]);
+    if(el && el.classList.contains('active')) return tabs[i][1];
+  }
+  return 'Learning Academy XTC';
+}
+function bsgSetupHelpFab(){
+  var fab=g('bsgFab'), panel=g('bsgHelpPanel'), link=g('bsgHelpReportLink'), ctx=g('bsgHelpCtx');
+  if(!fab.addEventListener)return; // g() devuelve stub si no existe el elemento
+  fab.addEventListener('click',function(){
+    var willOpen = panel.hidden;
+    panel.hidden = !panel.hidden;
+    if(willOpen){
+      var pantalla=bsgActiveTabName();
+      var usuario=(typeof CU!=='undefined'&&CU)?CU:'(sin sesión)';
+      var version=(g('footerBuildInfo').textContent||'').trim();
+      ctx.textContent='contexto: '+pantalla+' · '+version+' · '+usuario;
+      var subject='[Learning Academy XTC] Reporte desde '+pantalla;
+      var body='Pantalla: '+pantalla+'\nUsuario: '+usuario+'\nVersión: '+version+'\n\nDescribí acá qué esperabas ver y qué viste:\n';
+      link.href='mailto:'+BSG_HELP_MAILTO+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    }
+  });
+  document.addEventListener('click',function(e){
+    if(!panel.hidden && !panel.contains(e.target) && e.target!==fab && !fab.contains(e.target)){
+      panel.hidden=true;
+    }
+  });
+}
+
+// ============================================================
 // STATE FACTORIES — completely independent per tab
 // ============================================================
 function makeState(cfgList){
@@ -1634,6 +1765,12 @@ function mapProgRow(headers,row){
     pais:       gV(map,['Unidad de negocio (Label)']),
     segmento:   gV(map,['Tipo de segmento']),
     depto:      gV(map,['Departamento (Label)']),
+    // NUEVO (14-sep, Correccion 23): si el alias exacto no matchea, se busca cualquier header
+    // que contenga "divis" (cubre variantes como "Division", "Divisiones (Label)", con/sin
+    // parentesis, may/minusculas \u2014 nH() ya le saco tildes y espacios) antes de resignarse a
+    // dejarlo vacio. Sin esto, una diferencia minima en el nombre real de la columna deja el
+    // filtro Division completamente vacio para staff ("Sin opciones") sin ningun aviso.
+    division:   gV(map,['Divisi\u00f3n (Label)','Division (Label)']) || gVContains(map,'divis'),
     fechaContr: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).txt,
     fechaContrDate: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).date,
     nombre:     gV(map,['Nombre completo del usuario',"User's Fullname",'Fullname']),
@@ -1666,6 +1803,7 @@ function mapCursRow(headers,row){
     pais:       gV(map,['Unidad de negocio (Label)']),
     segmento:   gV(map,['Tipo de segmento']),
     depto:      gV(map,['Departamento (Label)']),
+    division:   gV(map,['Divisi\u00f3n (Label)','Division (Label)']) || gVContains(map,'divis'),
     nombre:     gV(map,['Nombre completo del usuario',"User's Fullname",'Fullname']),
     posicion:   gV(map,['Nombre de la Posicion al finalizar','Nombre de la Posici\u00f3n al finalizar','Completion Position Name']),
     estado:     normSt(_rawEstadoC),
@@ -2051,6 +2189,10 @@ function readExcel(file,isProg,cb){
       var headers=rows[0];
       // Trim all header values
       headers=headers.map(function(h){return String(h||'').trim();});
+      // NUEVO (14-sep, Correccion 23): guarda los headers crudos del ultimo archivo cargado en
+      // window.lastHeaders para poder diagnosticar rapido por consola ("window.lastHeaders")
+      // cuando un alias (ej. Division) no matchea y un filtro queda vacio sin aviso visible.
+      window.lastHeaders = headers.slice();
       var mapped=[];
       for(var i=1;i<rows.length;i++){
         // Trim all cell values
@@ -3337,11 +3479,17 @@ function aEvoBadge(evo){
 
 // ---- Filtros / alcance ----
 function aGetSel(id){ return Object.keys(A.fSel[id]||{}); }
+// NUEVO (14-sep): para el login "staff", Región/Distrito no tienen sentido (STAFF no tiene
+// estructura geográfica) — se reutilizan esos mismos dos huecos de filtro para División y
+// Departamento (subárea), que sí son los campos reales de corte para ese segmento. Ver
+// aPopulate()/enterDash() para el cambio de etiqueta visible.
+function aIsStaff(){ return !!(typeof CU!=='undefined' && CU && LOGINS[CU] && LOGINS[CU].viewMode==='staff'); }
 function aOrgFilterRow(r){
+  var staff=aIsStaff();
   var sP=aGetSel('aFPais'), sR=aGetSel('aFRegion'), sD=aGetSel('aFDistrito');
   if(sP.length && sP.indexOf(r.pais)<0) return false;
-  if(sR.length && sR.indexOf(r.region)<0) return false;
-  if(sD.length && sD.indexOf(r.distrito)<0) return false;
+  if(sR.length && sR.indexOf(staff?r.division:r.region)<0) return false;
+  if(sD.length && sD.indexOf(staff?r.depto:r.distrito)<0) return false;
   return true;
 }
 function aScopeProgRows(){
@@ -3370,13 +3518,16 @@ function aBadge(){
   else el.style.display='none';
 }
 function aPopulate(){
+  var staff=aIsStaff();
+  var rLbl=g('aFRegionLabel'); if(rLbl) rLbl.textContent = staff ? 'División' : 'Región';
+  var dLbl=g('aFDistritoLabel'); if(dLbl) dLbl.textContent = staff ? 'Departamento' : 'Distrito';
   setOpts(A,'aFPais', (P.raw||[]).map(function(r){return r.pais;}), true, aDoFilter);
   var sP=aGetSel('aFPais');
   var baseRegion = sP.length ? (P.raw||[]).filter(function(r){return sP.indexOf(r.pais)>=0;}) : (P.raw||[]);
-  setOpts(A,'aFRegion', baseRegion.map(function(r){return r.region;}), true, aDoFilter);
+  setOpts(A,'aFRegion', baseRegion.map(function(r){return staff?r.division:r.region;}), true, aDoFilter);
   var sR=aGetSel('aFRegion');
-  var baseDist = baseRegion.filter(function(r){ return !sR.length || sR.indexOf(r.region)>=0; });
-  setOpts(A,'aFDistrito', baseDist.map(function(r){return r.distrito;}), true, aDoFilter);
+  var baseDist = baseRegion.filter(function(r){ return !sR.length || sR.indexOf(staff?r.division:r.region)>=0; });
+  setOpts(A,'aFDistrito', baseDist.map(function(r){return staff?r.depto:r.distrito;}), true, aDoFilter);
   setOpts(A,'aFPrograma', (P.raw||[]).map(function(r){return r.programa;}), true, aDoFilter);
   setOpts(A,'aFCurso', (C.raw||[]).map(function(r){return r.curso;}), true, aDoFilter);
 }
@@ -3541,9 +3692,17 @@ function aCompareTable(){
 }
 
 // ---- BLOQUE 4: Análisis por distrito ----
+// NUEVO (14-sep): oculto por completo para el login "staff" — este bloque, "Evolución por
+// Departamento (Tienda)" (4b) y "Ranking de Distritos" (5) están pensados para la jerarquía
+// geográfica de tienda (Distrito → Departamento/tienda); para STAFF el filtro "Distrito" ya
+// fue reutilizado para mostrar Departamento (subárea, ver aPopulate()), así que estos 3
+// bloques específicos no se reaplican con esa nueva semántica (quedaría "Departamento
+// dentro de Departamento", confuso) — decisión confirmada con la usuaria.
 function aDistrictBlock(){
-  var sD=aGetSel('aFDistrito');
   var wrap=g('aDistrictWrap');
+  if(aIsStaff()){ wrap.style.display='none'; return; }
+  wrap.style.display='';
+  var sD=aGetSel('aFDistrito');
   if(sD.length!==1){
     wrap.innerHTML='<div class="no-data-state" style="padding:24px 20px"><p>Seleccioná un único <strong>Distrito</strong> en los filtros para ver el detalle de desempeño por programa.</p></div>';
     return;
@@ -3576,8 +3735,9 @@ function aDistrictBlock(){
 // hace scroll interno si hace falta (decisión explícita del usuario, ver aDeptChartScroll en
 // el HTML) — a diferencia de aProgEvolTable() que sí recorta a 8 programas.
 function aDeptBlock(){
-  var sD=aGetSel('aFDistrito');
   var chartBox=g('aDeptChartBox'), tableBox=g('aDeptTableBox');
+  if(aIsStaff()){ chartBox.style.display='none'; tableBox.style.display='none'; Plotly.purge('aDeptC'); return; }
+  var sD=aGetSel('aFDistrito');
   if(sD.length!==1){
     if(chartBox) chartBox.style.display='none';
     if(tableBox) tableBox.style.display='none';
@@ -3634,8 +3794,9 @@ function aDeptBlock(){
 // mantener un único criterio de filtrado en todo el tab (pedido explícito del usuario), se
 // usa aScopeProgRows() en vez de una réplica manual del filtro de País/Región/Programa.
 function aRankingBlock(){
-  var sD=aGetSel('aFDistrito');
   var chartBox=g('aRankChartBox'), tableBox=g('aRankTableBox');
+  if(aIsStaff()){ chartBox.style.display='none'; tableBox.style.display='none'; Plotly.purge('aRankC'); return; }
+  var sD=aGetSel('aFDistrito');
   if(sD.length>0){
     if(chartBox) chartBox.style.display='none';
     if(tableBox) tableBox.style.display='none';
@@ -3734,6 +3895,8 @@ document.addEventListener('DOMContentLoaded',function(){
   g('tabBtnCurs').addEventListener('click',showTabCurs);
   var faBtn=g('tabBtnAnalytics');
   if(faBtn)faBtn.addEventListener('click',showTabAnalytics);
+  // BSG (Corrección 24): botón flotante de ayuda/reporte — ver bsgSetupHelpFab()
+  bsgSetupHelpFab();
   // Resize all Plotly charts when window resizes
   window.addEventListener('resize',function(){
     ['pC1','pC2','pC3','pC4','cC1','cC2','cC3','cC4','infEvChart','aEvolC','aRankC'].forEach(function(id){
