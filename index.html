@@ -1035,8 +1035,8 @@ function sortData(data, col, dir){
     var av=a[col],bv=b[col];
     // Numeric fields
     if(col==='progreso'){ av=Number(av)||0; bv=Number(bv)||0; return dir*(av-bv); }
-    // Date fields
-    if(col==='fechaContrDate'){
+    // Date fields — fechaContrDate (Programas) y fechaFinDate (Cursos) son objetos Date
+    if(col==='fechaContrDate'||col==='fechaFinDate'){
       av=av?av.getTime():0; bv=bv?bv.getTime():0; return dir*(av-bv);
     }
     // String fields
@@ -3124,10 +3124,30 @@ function cTable(){
   var s=g('cTSearch').value.trim().toLowerCase();
   var data=C.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.curso.toLowerCase().indexOf(s)>=0||r.pais.toLowerCase().indexOf(s)>=0;});
+  // NUEVO (17-sep): ordenar por columna, mismo mecanismo que ya tenia Programas
+  // (sortData()/mkSortHeader()/handleSort(), reutilizados tal cual — C_SORT ya
+  // existia como estado global preparado para esto pero nunca se habia conectado).
+  data=sortData(data,C_SORT.col,C_SORT.dir);
   var tp=Math.ceil(data.length/PS);if(C.page>tp)C.page=tp||1;
   var pd=data.slice((C.page-1)*PS,(C.page)*PS);
   g('cTCount').textContent=data.length.toLocaleString()+' registros';
-  document.querySelector('#cTable thead tr').innerHTML='<th>Curso</th><th>Pais</th><th>Nombre</th><th>Estado</th><th>Progreso</th><th>Dpto</th><th>Distrito</th><th>Legajo</th><th>Posicion</th><th>F.Finalizacion</th><th>Categoria</th>';
+  var ss=C_SORT;
+  document.querySelector('#cTable thead tr').innerHTML=
+    mkSortHeader('Curso','curso',ss,cTable)+
+    mkSortHeader('Pais','pais',ss,cTable)+
+    mkSortHeader('Nombre','nombre',ss,cTable)+
+    mkSortHeader('Estado','estado',ss,cTable)+
+    mkSortHeader('Progreso','progreso',ss,cTable)+
+    mkSortHeader('Dpto','depto',ss,cTable)+
+    mkSortHeader('Distrito','distrito',ss,cTable)+
+    mkSortHeader('Legajo','legajo',ss,cTable)+
+    mkSortHeader('Posicion','posicion',ss,cTable)+
+    mkSortHeader('F.Finalizacion','fechaFinDate',ss,cTable)+
+    mkSortHeader('Categoria','categoria',ss,cTable);
+  // Attach sort click listeners
+  document.querySelectorAll('#cTable thead th.sortable').forEach(function(th){
+    th.addEventListener('click',function(){ handleSort(th,C_SORT,cTable); });
+  });
   var h='';
   pd.forEach(function(r){
     var ec=r.estado==='Completado'?'color:#7E63A0;background:#EFE7F4':'color:#A45F2B;background:#FDE8DB';
