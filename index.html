@@ -531,7 +531,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       <div class="table-section">
         <div class="table-controls">
           <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:.9rem;color:#444">Detalle por Usuario</span><span class="page-info" id="pTCount"></span></div>
-          <div style="display:flex;gap:7px"><input type="text" class="table-search" id="pTSearch" placeholder="Buscar..."><button class="btn-export" id="pBtnExp">Exportar CSV</button></div>
+          <div style="display:flex;gap:7px"><input type="text" class="table-search" id="pTSearch" placeholder="Buscar..."><button class="btn-export" id="pBtnExp">Exportar Excel</button></div>
         </div>
         <div style="overflow-x:auto;max-height:560px;overflow-y:auto"><table class="detail-table" id="pTable"><thead><tr></tr></thead><tbody></tbody></table></div>
         <div class="pagination" id="pPag"></div>
@@ -596,7 +596,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       <div class="table-section">
         <div class="table-controls">
           <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:.9rem;color:#444">Detalle por Usuario</span><span class="page-info" id="cTCount"></span></div>
-          <div style="display:flex;gap:7px"><input type="text" class="table-search" id="cTSearch" placeholder="Buscar..."><button class="btn-export" id="cBtnExp">Exportar CSV</button></div>
+          <div style="display:flex;gap:7px"><input type="text" class="table-search" id="cTSearch" placeholder="Buscar..."><button class="btn-export" id="cBtnExp">Exportar Excel</button></div>
         </div>
         <div style="overflow-x:auto;max-height:560px;overflow-y:auto"><table class="detail-table" id="cTable"><thead><tr></tr></thead><tbody></tbody></table></div>
         <div class="pagination" id="cPag"></div>
@@ -919,6 +919,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         </div>
         <div id="aEvolC" style="height:320px"></div>
         <div style="font-size:.68rem;color:#aaa;margin-top:6px">Los meses sin marcador indican que el programa/curso aún no estaba disponible ("No disponible / No lanzado"). El último mes (el actual) usa el estado real de cada registro — coincide con "Tasa Completitud" de Programas/Cursos —; los meses anteriores son una estimación calculada a partir de la fecha de finalización registrada (no todos los registros completados la tienen cargada).</div>
+        <div id="aEvolCoverageNote" style="font-size:.68rem;margin-top:4px;display:none"></div>
       </div>
 
       <!-- BLOQUE 3 — COMPARACIÓN DE PERÍODOS -->
@@ -1385,7 +1386,16 @@ function applyMetaOnly(isProg, meta){
 // headers, pero sin colapsar espacios (para no mezclar segmentos distintos por accidente).
 function normUpper(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase(); }
 var ALLOWED_PAISES = ['ARGENTINA','MEXICO','CHILE','PERU'];
-var ALLOWED_SEGMENTOS = ['STAFF RETAIL','TIENDA ATELIER','TIENDA TMB','TIENDA TODOMODA','TIENDA ISADORA'];
+// CAMBIO (02-oct): la usuaria pidió volver a ver la nómina completa en los logins de país
+// (ej. argentina) — antes (Corrección 11, a pedido de ella misma en ese momento) el segmento
+// "STAFF" puro (personal de oficina, distinto de "STAFF RETAIL") quedaba afuera del alcance
+// fijo para cualquier login que no fuera el login exclusivo "staff". Se agrega 'STAFF' acá
+// para que vuelva a pasar el alcance fijo junto con los segmentos de tienda — el control de
+// si se muestra o no sigue siendo el toggle "Incluir STAFF en los cálculos" que ya existía
+// (EXCLUDE_STAFF / applyStaffFilter en Programas, EXCLUDE_STAFF_C en Cursos): tildado trae
+// STAFF + STAFF RETAIL + tiendas (nómina completa), destildado deja solo los segmentos de
+// tienda. El login exclusivo "staff" no se toca (sigue usando su propio segScope).
+var ALLOWED_SEGMENTOS = ['STAFF','STAFF RETAIL','TIENDA ATELIER','TIENDA TMB','TIENDA TODOMODA','TIENDA ISADORA'];
 var ALLOWED_PAISES_N = ALLOWED_PAISES.map(normUpper);
 var ALLOWED_SEGMENTOS_N = ALLOWED_SEGMENTOS.map(normUpper);
 // NUEVO (14-sep): alcance de segmento POR LOGIN. Antes ALLOWED_SEGMENTOS_N era el mismo
@@ -1727,6 +1737,17 @@ function palette(n){var b=[BASE.orange,BASE.purple,BASE.yellow];if(n<=3)return b
 function aH(n,mn,per,mx){return Math.min(mx,Math.max(mn,n*per));}
 function trunc(s,ml){if(!s)return'';return s.length>ml?s.substring(0,ml-1)+'...':s;}
 function downloadCSV(csv,fn){var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;a.click();URL.revokeObjectURL(url);}
+// NUEVO (02-oct): exportaci\u00f3n real a Excel (.xlsx), reutilizando la misma librer\u00eda SheetJS
+// que ya se usa para LEER los archivos de Programas/Cursos (xlsx.full.min.js, soporta
+// escritura adem\u00e1s de lectura) \u2014 no se agrega ninguna dependencia nueva. hdr es un array de
+// encabezados y rows un array de arrays (una fila = un array de celdas, mismo orden que hdr).
+function downloadXLSX(hdr,rows,fn,sheetName){
+  var aoa=[hdr].concat(rows);
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,sheetName||'Datos');
+  XLSX.writeFile(wb,fn);
+}
 
 // ============================================================
 // DATA MAPPING — exact column names from real files
@@ -1774,7 +1795,12 @@ function mapProgRow(headers,row){
     fechaContr: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).txt,
     fechaContrDate: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).date,
     nombre:     gV(map,['Nombre completo del usuario',"User's Fullname",'Fullname']),
-    posicion:   gV(map,['Nombre(s) de la(s) posicion(es) del usuario',"User's Position Name(s)",'Position']),
+    // NUEVO (17-sep, Corrección 26): la usuaria cambió el export de Programas para que la
+    // posición venga en la columna "Título(s) de trabajo del usuario" (antes "Nombre(s) de
+    // la(s) posición(es) del usuario") — se agrega como alias nuevo (primero, porque es el
+    // que va a traer el archivo de ahora en más) sin sacar los anteriores, para no romper
+    // un archivo viejo que todavía use el nombre de columna anterior.
+    posicion:   gV(map,['Título(s) de trabajo del usuario','Titulo(s) de trabajo del usuario',"User's Job Title(s)",'Job Title(s)','Nombre(s) de la(s) posicion(es) del usuario',"User's Position Name(s)",'Position']),
     primerAcceso: gV(map,['Primer Acceso del Usuario','User First Access']),
     progreso:   parseProgreso(gV(map,['Progreso Programa (%)'])),
     estado:     _estadoNormProg,
@@ -1795,7 +1821,21 @@ function mapCursRow(headers,row){
   // ese archivo sin ningun error visible (curso, legajo, posicion, estado, progreso,
   // fechaFin, categoria, calificacion) \u2014 causa real de "a veces tira errores" al subir.
   var _rawEstadoC=gV(map,['Estatus de finalizacion','Estatus de finalizaci\u00f3n','Completion Status']);
-  var fFin=parseDate(gV(map,['La fecha de finalizacion','Fecha de finalizacion','The completion date']));
+  // NUEVO (28-sep, Correcci\u00f3n 28): "Fecha de Finalizaci\u00f3n" de Programas ya ten\u00eda, desde la
+  // Correcci\u00f3n 6, un fallback difuso (gVContains(map,'finaliz')) para cuando el header real
+  // no matchea ninguno de los alias exactos \u2014 Cursos nunca tuvo ese mismo respaldo, y esa es
+  // la causa m\u00e1s probable de que "Evoluci\u00f3n mensual" se vea plana apenas se filtra por un
+  // Curso puntual (usuaria lo not\u00f3 comparando contra Programas, que s\u00ed funciona bien): si el
+  // header real de esta columna en el export de Cursos no matchea ninguno de los 3 alias de
+  // abajo, fechaFinDate queda vac\u00edo para TODAS las filas de Cursos y cualquier mes anterior
+  // al actual se reconstruye a partir de nada.
+  // OJO: ac\u00e1 NO alcanza con el fragmento ancho 'finaliz' que usa Programas \u2014 en el header
+  // real de Cursos, "Nombre de la Posicion al finalizar" (posicion) tambi\u00e9n contiene ese
+  // fragmento ("...al finalizar") y, al aparecer ANTES que la columna de fecha en el archivo,
+  // gVContains devolv\u00eda por error el valor de posici\u00f3n como si fuera la fecha. Se usa el
+  // fragmento m\u00e1s espec\u00edfico 'fechadefinaliz' (exige que "fecha" preceda a "finaliz") para
+  // no repetir esa colisi\u00f3n.
+  var fFin=parseDate(gV(map,['La fecha de finalizacion','Fecha de finalizacion','The completion date']) || gVContains(map,'fechadefinaliz'));
   var _fechaFinDateC=rapFallbackDate(_rawEstadoC,fFin.date);
   return{
     curso:      gV(map,['Nombre del Curso','Nombre del curso','Course Name']),
@@ -2984,10 +3024,11 @@ function pExport(){
   var s=g('pTSearch').value.trim().toLowerCase();
   var data=P.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.programa.toLowerCase().indexOf(s)>=0;});
-  var nl='\n',hdr=['Programa','Pais','Nombre','Estado','Progreso (%)','Segmento','Departamento','Distrito','Region','Legajo','Posicion','Fecha Contratacion'];
-  var csv=hdr.map(function(h){return '"'+h+'"';}).join(',')+nl;
-  data.forEach(function(r){csv+=[r.programa,r.pais,r.nombre,r.estado,r.progreso,r.segmento,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaContr].map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',')+nl;});
-  downloadCSV(csv,'programas_export.csv');
+  // NUEVO (02-oct): export real a Excel (antes era CSV) — ver downloadXLSX(). Mismas columnas
+  // y mismo alcance filtrado (P.filt + búsqueda de la tabla) que tenía el export anterior.
+  var hdr=['Programa','Pais','Nombre','Estado','Progreso (%)','Segmento','Departamento','Distrito','Region','Legajo','Posicion','Fecha Contratacion'];
+  var rows=data.map(function(r){return [r.programa,r.pais,r.nombre,r.estado,r.progreso,r.segmento,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaContr];});
+  downloadXLSX(hdr,rows,'programas_export.xlsx','Programas');
 }
 
 // ============================================================
@@ -3169,10 +3210,11 @@ function cExport(){
   var s=g('cTSearch').value.trim().toLowerCase();
   var data=C.filt;
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.curso.toLowerCase().indexOf(s)>=0;});
-  var nl='\n',hdr=['Curso','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Finalizacion','Categoria'];
-  var csv=hdr.map(function(h){return '\"'+h+'\"';}).join(',')+nl;
-  data.forEach(function(r){csv+=[r.curso,r.pais,r.nombre,r.estado,r.progreso,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaFin,r.categoria].map(function(c){return '\"'+String(c||'').replace(/\"/g,'\"\"')+'\"';}).join(',')+nl;});
-  downloadCSV(csv,'cursos_export.csv');
+  // NUEVO (02-oct): export real a Excel (antes era CSV) — ver downloadXLSX(). Mismas columnas
+  // y mismo alcance filtrado (C.filt + búsqueda de la tabla) que tenía el export anterior.
+  var hdr=['Curso','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Finalizacion','Categoria'];
+  var rows=data.map(function(r){return [r.curso,r.pais,r.nombre,r.estado,r.progreso,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaFin,r.categoria];});
+  downloadXLSX(hdr,rows,'cursos_export.xlsx','Cursos');
 }
 
 // ============================================================
@@ -3643,18 +3685,32 @@ function aOverview(){
 // al actual (Bloque 2/3/4/5/6) va a subestimar esos meses — no es un error de calculo,
 // es un dato que falta en el archivo fuente. El mes actual nunca depende de esto (usa
 // el estado real).
+// NUEVO (28-sep): se separó el cálculo de "cobertura de fecha de finalización" de su
+// único uso anterior (el aviso de Overview, que solo mira el alcance de Programas) para
+// poder reutilizarlo también en "Evolución mensual" (Bloque 2) — ese gráfico puede estar
+// mostrando Cursos filtrados por un Curso puntual (ver aEvolScope()), un alcance distinto
+// al de Overview, así que el aviso de Overview no explicaba por qué UN gráfico filtrado
+// por Curso podía quedar plano en 0% varios meses y "saltar" recién en el mes actual —
+// eso pasa cuando pocos de los registros "Completado" de ESE alcance puntual tienen la
+// fecha de finalización cargada (el mes actual siempre es exacto porque usa el estado
+// real; los meses anteriores dependen 100% de esa fecha para reconstruirse).
+function aCoverageStats(rows){
+  var completados=0, conFecha=0;
+  rows.forEach(function(r){ if(r.estado==='Completado'){ completados++; if(r.fechaFinDate) conFecha++; } });
+  return {completados:completados, conFecha:conFecha, pct: completados?Math.round(conFecha/completados*100):null};
+}
+function aCoverageMsg(rows){
+  var st=aCoverageStats(rows);
+  if(!st.completados) return {text:'',low:false};
+  var txt='De los '+st.completados.toLocaleString()+' registros "Completado" en este alcance, '+st.conFecha.toLocaleString()+' ('+st.pct+'%) tienen fecha de finalización cargada.';
+  var low = st.pct<50;
+  if(low) txt+=' Con esa cobertura, los meses ANTERIORES al actual van a mostrar valores muy por debajo de la realidad — es una limitación del dato de origen, no del cálculo. El mes actual siempre es exacto.';
+  return {text:txt,low:low};
+}
 function aDateCoverageNote(rows){
   var el=g('aDateCoverage');
   if(!el||!el.style) return;
-  var completados=0, conFecha=0;
-  rows.forEach(function(r){
-    if(r.estado==='Completado'){ completados++; if(r.fechaFinDate) conFecha++; }
-  });
-  if(!completados){ el.textContent=''; return; }
-  var pct=Math.round(conFecha/completados*100);
-  var txt='De los '+completados.toLocaleString()+' registros "Completado" en el alcance actual, '+conFecha.toLocaleString()+' ('+pct+'%) tienen fecha de finalización cargada.';
-  if(pct<50) txt+=' Con esa cobertura, los meses ANTERIORES al actual van a mostrar valores muy por debajo de la realidad — es una limitación del dato de origen, no del cálculo. El mes actual siempre es exacto.';
-  el.textContent=txt;
+  el.textContent=aCoverageMsg(rows).text;
 }
 
 // ---- BLOQUE 2: Evolución mensual ----
@@ -3678,6 +3734,19 @@ function aEvolChart(){
     margin:{l:44,r:20,t:10,b:36}, font:{family:'Inter',size:11},
     yaxis:{range:[0,100],ticksuffix:'%'}, xaxis:{tickangle:0}
   },{displayModeBar:false,responsive:true});
+  // NUEVO (28-sep): aviso de cobertura de fecha de finalización específico de ESTE gráfico
+  // (Curso o Programa filtrado) — ver aCoverageMsg(). Antes solo existía este aviso para
+  // Overview (alcance de Programas completo), así que un gráfico filtrado por un Curso
+  // puntual que se ve plano y "salta" recién en el mes actual no tenía ninguna explicación
+  // visible en esa misma sección — quedaba solo la nota genérica y estática de más arriba.
+  var covEl=g('aEvolCoverageNote');
+  if(covEl && covEl.style){
+    var cov=aCoverageMsg(rows);
+    covEl.textContent=cov.text;
+    covEl.style.display = cov.text ? 'block' : 'none';
+    covEl.style.color = cov.low ? '#c0392b' : '#888';
+    covEl.style.fontWeight = cov.low ? '600' : '400';
+  }
 }
 
 // ---- BLOQUE 3: Comparación de períodos ----
