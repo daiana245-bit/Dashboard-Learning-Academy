@@ -1037,7 +1037,7 @@ function sortData(data, col, dir){
     // Numeric fields
     if(col==='progreso'){ av=Number(av)||0; bv=Number(bv)||0; return dir*(av-bv); }
     // Date fields — fechaContrDate (Programas) y fechaFinDate (Cursos) son objetos Date
-    if(col==='fechaContrDate'||col==='fechaFinDate'){
+    if(col==='fechaContrDate'||col==='fechaFinDate'||col==='fechaAsigDate'){
       av=av?av.getTime():0; bv=bv?bv.getTime():0; return dir*(av-bv);
     }
     // String fields
@@ -1097,12 +1097,12 @@ var SB_HDRS   = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type'
 
 // ── Compact rows to arrays (saves ~60% bandwidth) ──────────
 function compactRow(r,isProg){
-  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto&&r.depto.length>40?r.depto.substring(0,40):r.depto,r.nombre,r.posicion&&r.posicion.length>60?r.posicion.substring(0,60):r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0,r.fechaFinDate?r.fechaFinDate.getTime():0];
-  return [r.curso,r.legajo,r.pais,r.segmento,r.depto,r.nombre,r.posicion,r.estado,r.progreso,r.fechaFin,r.distrito,r.region,r.calificacion,r.categoria];
+  if(isProg) return [r.programa,r.legajo,r.pais,r.segmento,r.depto&&r.depto.length>40?r.depto.substring(0,40):r.depto,r.nombre,r.posicion&&r.posicion.length>60?r.posicion.substring(0,60):r.posicion,r.progreso,r.estado,r.distrito,r.region,r.fechaContrDate?r.fechaContrDate.getTime():0,r.fechaFinDate?r.fechaFinDate.getTime():0,r.fechaAsigDate?r.fechaAsigDate.getTime():0];
+  return [r.curso,r.legajo,r.pais,r.segmento,r.depto,r.nombre,r.posicion,r.estado,r.progreso,r.fechaFin,r.distrito,r.region,r.calificacion,r.categoria,r.fechaAsigDate?r.fechaAsigDate.getTime():0];
 }
 function expandRow(a,isProg){
-  if(isProg){var ts=a[11],tsf=a[12];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],progreso:a[7],estado:a[8],distrito:a[9],region:a[10],fechaContrDate:ts?new Date(ts):null,fechaFinDate:tsf?new Date(tsf):null,fechaContr:ts?new Date(ts).toLocaleDateString('es-AR'):'',primerAcceso:''}}
-  return{curso:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],estado:a[7],progreso:a[8],fechaFin:a[9],distrito:a[10],region:a[11],calificacion:a[12],categoria:a[13]};
+  if(isProg){var ts=a[11],tsf=a[12];return{programa:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],progreso:a[7],estado:a[8],distrito:a[9],region:a[10],fechaContrDate:ts?new Date(ts):null,fechaFinDate:tsf?new Date(tsf):null,fechaAsigDate:a[13]?new Date(a[13]):null,fechaContr:ts?new Date(ts).toLocaleDateString('es-AR'):'',primerAcceso:''}}
+  return{curso:a[0],legajo:a[1],pais:a[2],segmento:a[3],depto:a[4],nombre:a[5],posicion:a[6],estado:a[7],progreso:a[8],fechaFin:a[9],distrito:a[10],region:a[11],calificacion:a[12],categoria:a[13],fechaAsigDate:a[14]?new Date(a[14]):null};
 }
 
 // ── Save to Supabase (upsert row id=1) ──────────────────────
@@ -1741,6 +1741,7 @@ function downloadCSV(csv,fn){var blob=new Blob(['\ufeff'+csv],{type:'text/csv;ch
 // que ya se usa para LEER los archivos de Programas/Cursos (xlsx.full.min.js, soporta
 // escritura adem\u00e1s de lectura) \u2014 no se agrega ninguna dependencia nueva. hdr es un array de
 // encabezados y rows un array de arrays (una fila = un array de celdas, mismo orden que hdr).
+function fmtFecha(d){ if(!d||isNaN(d.getTime())) return ''; return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
 function downloadXLSX(hdr,rows,fn,sheetName){
   var aoa=[hdr].concat(rows);
   var ws=XLSX.utils.aoa_to_sheet(aoa);
@@ -1802,6 +1803,10 @@ function mapProgRow(headers,row){
     // un archivo viejo que todavía use el nombre de columna anterior.
     posicion:   gV(map,['Título(s) de trabajo del usuario','Titulo(s) de trabajo del usuario',"User's Job Title(s)",'Job Title(s)','Nombre(s) de la(s) posicion(es) del usuario',"User's Position Name(s)",'Position']),
     primerAcceso: gV(map,['Primer Acceso del Usuario','User First Access']),
+    // NUEVO (05-oct, Correcci\u00f3n 30): "Fecha asignada" = fecha en que se asign\u00f3 el programa a la
+    // persona (columna nueva del informe diario). Alias exactos + fallback difuso con fragmento
+    // espec\u00edfico ('fechaasignad' / 'fechadeasignac') para no pisar otras columnas.
+    fechaAsigDate: parseDate(gV(map,['Fecha asignada','Fecha de asignacion','Fecha de asignaci\u00f3n','Assigned date','Date assigned']) || gVContains(map,'fechaasignad') || gVContains(map,'fechadeasignac')).date,
     progreso:   parseProgreso(gV(map,['Progreso Programa (%)'])),
     estado:     _estadoNormProg,
     distrito:   gV(map,['Distrito']),
@@ -1851,6 +1856,9 @@ function mapCursRow(headers,row){
     fechaFin:   fFin.txt||(_fechaFinDateC&&_fechaFinDateC!==fFin.date?'01/11/2026 (RAP, estimado)':''),
     fechaFinDate: _fechaFinDateC,
     fechaContrDate: parseDate(gV(map,['Fecha de contratacion','Fecha de contrataci\u00f3n'])).date,
+    // NUEVO (05-oct, Correcci\u00f3n 30): en Cursos la fecha de asignaci\u00f3n viene como "Fecha de
+    // inscripci\u00f3n" (confirmado por la usuaria; es el mismo dato que "Fecha asignada" de Programas).
+    fechaAsigDate: parseDate(gV(map,['Fecha de inscripcion','Fecha de inscripci\u00f3n','Fecha asignada','Fecha de asignacion','Fecha de asignaci\u00f3n','Enrolled date','Enrolment date','Date enrolled']) || gVContains(map,'fechadeinscrip') || gVContains(map,'fechaasignad')).date,
     distrito:   gV(map,['Distrito']),
     region:     gV(map,['Region','Regi\u00f3n']),
     calificacion: gV(map,['Calificacion','Calificaci\u00f3n','Grade']),
@@ -2999,6 +3007,7 @@ function pTable(){
     mkSortHeader('Region','region',ss,pTable)+
     mkSortHeader('Legajo','legajo',ss,pTable)+
     mkSortHeader('Posicion','posicion',ss,pTable)+
+    mkSortHeader('F.Asignacion','fechaAsigDate',ss,pTable)+
     mkSortHeader('F.Contratacion','fechaContrDate',ss,pTable);
   // Attach sort click listeners
   document.querySelectorAll('#pTable thead th.sortable').forEach(function(th){
@@ -3015,6 +3024,7 @@ function pTable(){
     h+='<td>'+pb+'</td><td>'+esc(r.segmento)+'</td><td title="'+esc(r.depto)+'">'+esc(trunc(r.depto,22))+'</td>';
     h+='<td>'+esc(r.distrito)+'</td><td>'+esc(r.region)+'</td><td>'+esc(r.legajo)+'</td>';
     h+='<td style="font-size:.72rem;max-width:140px" title="'+esc(r.posicion)+'">'+esc(trunc(r.posicion,24))+'</td>';
+    h+='<td style="white-space:nowrap">'+fmtFecha(r.fechaAsigDate)+'</td>';
     h+='<td style="white-space:nowrap">'+r.fechaContr+'</td></tr>';
   });
   document.querySelector('#pTable tbody').innerHTML=h;
@@ -3026,8 +3036,8 @@ function pExport(){
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.programa.toLowerCase().indexOf(s)>=0;});
   // NUEVO (02-oct): export real a Excel (antes era CSV) — ver downloadXLSX(). Mismas columnas
   // y mismo alcance filtrado (P.filt + búsqueda de la tabla) que tenía el export anterior.
-  var hdr=['Programa','Pais','Nombre','Estado','Progreso (%)','Segmento','Departamento','Distrito','Region','Legajo','Posicion','Fecha Contratacion'];
-  var rows=data.map(function(r){return [r.programa,r.pais,r.nombre,r.estado,r.progreso,r.segmento,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaContr];});
+  var hdr=['Programa','Pais','Nombre','Estado','Progreso (%)','Segmento','Departamento','Distrito','Region','Legajo','Posicion','Fecha Asignacion','Fecha Contratacion'];
+  var rows=data.map(function(r){return [r.programa,r.pais,r.nombre,r.estado,r.progreso,r.segmento,r.depto,r.distrito,r.region,r.legajo,r.posicion,fmtFecha(r.fechaAsigDate),r.fechaContr];});
   downloadXLSX(hdr,rows,'programas_export.xlsx','Programas');
 }
 
@@ -3183,6 +3193,7 @@ function cTable(){
     mkSortHeader('Distrito','distrito',ss,cTable)+
     mkSortHeader('Legajo','legajo',ss,cTable)+
     mkSortHeader('Posicion','posicion',ss,cTable)+
+    mkSortHeader('F.Inscripcion','fechaAsigDate',ss,cTable)+
     mkSortHeader('F.Finalizacion','fechaFinDate',ss,cTable)+
     mkSortHeader('Categoria','categoria',ss,cTable);
   // Attach sort click listeners
@@ -3200,6 +3211,7 @@ function cTable(){
     h+='<td>'+pb+'</td><td title=\"'+esc(r.depto)+'\">'+esc(trunc(r.depto,20))+'</td>';
     h+='<td>'+esc(r.distrito)+'</td><td>'+esc(r.legajo)+'</td>';
     h+='<td style=\"font-size:.72rem;max-width:130px\" title=\"'+esc(r.posicion)+'\">'+esc(trunc(r.posicion,22))+'</td>';
+    h+='<td style=\"white-space:nowrap\">'+fmtFecha(r.fechaAsigDate)+'</td>';
     h+='<td style=\"white-space:nowrap\">'+esc(r.fechaFin)+'</td>';
     h+='<td>'+esc(r.categoria)+'</td></tr>';
   });
@@ -3212,8 +3224,8 @@ function cExport(){
   if(s)data=data.filter(function(r){return r.nombre.toLowerCase().indexOf(s)>=0||r.legajo.toLowerCase().indexOf(s)>=0||r.curso.toLowerCase().indexOf(s)>=0;});
   // NUEVO (02-oct): export real a Excel (antes era CSV) — ver downloadXLSX(). Mismas columnas
   // y mismo alcance filtrado (C.filt + búsqueda de la tabla) que tenía el export anterior.
-  var hdr=['Curso','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Finalizacion','Categoria'];
-  var rows=data.map(function(r){return [r.curso,r.pais,r.nombre,r.estado,r.progreso,r.depto,r.distrito,r.region,r.legajo,r.posicion,r.fechaFin,r.categoria];});
+  var hdr=['Curso','Pais','Nombre','Estado','Progreso (%)','Departamento','Distrito','Region','Legajo','Posicion','Fecha Inscripcion','Fecha Finalizacion','Categoria'];
+  var rows=data.map(function(r){return [r.curso,r.pais,r.nombre,r.estado,r.progreso,r.depto,r.distrito,r.region,r.legajo,r.posicion,fmtFecha(r.fechaAsigDate),r.fechaFin,r.categoria];});
   downloadXLSX(hdr,rows,'cursos_export.xlsx','Cursos');
 }
 
