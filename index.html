@@ -62,6 +62,7 @@ body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#333}
 .filter-group input[type=date]{width:100%;padding:7px 9px;border:1.5px solid #e5e5e5;border-radius:8px;font-size:.82rem;background:#fff;outline:none;transition:border .2s}
 .filter-group input[type=date]:focus{border-color:#E97132}
 .multi-select{position:relative}
+.mk-badge{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:6px;vertical-align:middle;cursor:help;flex:none}
 .ms-trigger{width:100%;min-height:38px;border:1.5px solid #e5e5e5;border-radius:8px;background:#fff;padding:5px 7px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;cursor:pointer}
 .ms-trigger:focus-within,.multi-select.open .ms-trigger{border-color:#E97132}
 .ms-placeholder{font-size:.82rem;color:#999}
@@ -434,6 +435,12 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       <input type="file" id="fiTalent" accept=".xlsx,.xls,.csv" style="display:none">
       <div class="upload-info" id="uiTalent"><strong id="uiTalentName"></strong><span id="uiTalentSize" style="color:#aaa"></span></div>
     </div>
+    <div style="margin-top:14px;border-top:1px dashed #e5e5e5;padding-top:14px">
+      <div style="font-size:.72rem;font-weight:700;color:#3B8F8C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Marcas especiales (opcional)</div>
+      <div class="upload-zone" id="uzMarcas"><div class="upload-zone-icon">&#128203;</div><div class="upload-zone-text">Marcas especiales (.xlsx o .csv)</div><div class="upload-zone-sub">Arrastra o haz click &mdash; solo 2 columnas: Legajo (o ID SF) y Tipo (ej. PCD, Licencia prolongada). Sin nombres ni datos personales. Cada carga reemplaza la anterior.</div></div>
+      <input type="file" id="fiMarcas" accept=".xlsx,.xls,.csv" style="display:none">
+      <div class="upload-info" id="uiMarcas"><strong id="uiMarcasName"></strong><span id="uiMarcasSize" style="color:#aaa"></span></div>
+    </div>
     <div id="modalStorageInfo" style="margin-top:12px;background:#f8f8f8;border-radius:8px;padding:10px 14px;font-size:.76rem;color:#666;line-height:1.7"></div>
     <!-- Access log - only shown to global -->
     <div id="accessLogSection" style="display:none;margin-top:14px;border-top:1px dashed #e5e5e5;padding-top:14px">
@@ -504,6 +511,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
             <div class="filter-group"><label>Posicion</label><div id="pFPosicion" class="multi-select"></div></div>
             <div class="filter-group"><label>Legajo</label><div id="pFLegajo" class="multi-select"></div></div>
             <div class="filter-group"><label>Estado</label><div id="pFEstado" class="multi-select"></div></div>
+            <div class="filter-group" id="pFMarcaGroup" style="display:none"><label>Marca especial</label><div id="pFMarca" class="multi-select"></div></div>
             <div class="filter-group"><label>F.Contratacion Desde</label><input type="date" id="pFDesde"></div>
             <div class="filter-group"><label>F.Contratacion Hasta</label><input type="date" id="pFHasta"></div>
           </div>
@@ -568,6 +576,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
             <div class="filter-group"><label>Posicion</label><div id="cFPosicion" class="multi-select"></div></div>
             <div class="filter-group"><label>Legajo</label><div id="cFLegajo" class="multi-select"></div></div>
             <div class="filter-group"><label>Estado del Curso</label><div id="cFEstado" class="multi-select"></div></div>
+            <div class="filter-group" id="cFMarcaGroup" style="display:none"><label>Marca especial</label><div id="cFMarca" class="multi-select"></div></div>
             <div class="filter-group"><label>Categoria</label><div id="cFCategoria" class="multi-select"></div></div>
           </div>
         </div>
@@ -1025,7 +1034,7 @@ var BASE={orange:'#E97132',purple:'#AE90C3',yellow:'#F5F378'};
 var CF=null,CU=null,PS=50;
 var P_SORT={col:null,dir:0}; // col=field name, dir=0 none,1 asc,-1 desc
 var C_SORT={col:null,dir:0};
-var pendProg=null,pendCurs=null,pendTalent=null;
+var pendProg=null,pendCurs=null,pendTalent=null,pendMarcas=null;
 var EXCLUDE_STAFF=false;  // toggle state for Programas
 var EXCLUDE_STAFF_C=false; // toggle state for Cursos
 
@@ -1507,6 +1516,8 @@ function getStorageInfo(){
   else info+='Cursos: sin datos guardados<br>';
   if(T.meta&&T.meta.fileName) info+='Talent Mapping: '+T.meta.fileName+' ('+T.meta.loadTime+', '+T.raw.length+' registros)';
   else info+='Talent Mapping: sin datos guardados';
+  if(M.meta&&M.meta.fileName) info+='<br>Marcas especiales: '+M.meta.fileName+' ('+M.meta.loadTime+', '+M.raw.length+' legajos)';
+  else info+='<br>Marcas especiales: sin datos guardados';
   return info;
 }
 
@@ -1562,13 +1573,13 @@ var P=makeState([
   {id:'pFPrograma',ph:'Todos'},{id:'pFPais',ph:'Todos'},{id:'pFDistrito',ph:'Todos'},
   {id:'pFDepto',ph:'Todos'},{id:'pFNombre',ph:'Todos'},{id:'pFRegion',ph:'Todas'},
   {id:'pFSegmento',ph:'Todos'},{id:'pFPosicion',ph:'Todos'},
-  {id:'pFLegajo',ph:'Todos'},{id:'pFEstado',ph:'Todos'}
+  {id:'pFLegajo',ph:'Todos'},{id:'pFEstado',ph:'Todos'},{id:'pFMarca',ph:'Todas'}
 ]);
 var C=makeState([
   {id:'cFCurso',ph:'Todos'},{id:'cFPais',ph:'Todos'},{id:'cFDistrito',ph:'Todos'},
   {id:'cFDepto',ph:'Todos'},{id:'cFNombre',ph:'Todos'},{id:'cFRegion',ph:'Todas'},
   {id:'cFSegmento',ph:'Todos'},{id:'cFPosicion',ph:'Todos'},
-  {id:'cFLegajo',ph:'Todos'},{id:'cFEstado',ph:'Todos'},{id:'cFCategoria',ph:'Todas'}
+  {id:'cFLegajo',ph:'Todos'},{id:'cFEstado',ph:'Todos'},{id:'cFCategoria',ph:'Todas'},{id:'cFMarca',ph:'Todas'}
 ]);
 
 // ============================================================
@@ -1884,7 +1895,7 @@ function doLogin(){
 function doLogout(){
   // Clear in-memory state only — localStorage data cache persists for next login
   P=makeState(P.cfg);C=makeState(C.cfg);
-  pendProg=null;pendCurs=null;pendTalent=null;CF=null;CU=null;SCOPE_BYPASS=false;
+  pendProg=null;pendCurs=null;pendTalent=null;pendMarcas=null;CF=null;CU=null;SCOPE_BYPASS=false;
   try{localStorage.removeItem('xtc_session_user');}catch(e){}
   g('dashboardScreen').style.display='none';
   g('loginScreen').style.display='flex';
@@ -1944,6 +1955,7 @@ function enterDash(){
   restoreData(false, function(){
     refreshTabCurs();
   });
+  restoreMarcasData(function(){});
   restoreTalentData(function(){
     if(typeof RM_SELECTED_LEGAJO!=='undefined' && RM_SELECTED_LEGAJO) rmRenderTimeline(RM_SELECTED_LEGAJO);
   });
@@ -2097,9 +2109,9 @@ function loadAccessLog(){
 }
 
 function openModal(){
-  pendProg=null;pendCurs=null;pendTalent=null;
-  g('uiProg').style.display='none';g('uiCurs').style.display='none';g('uiTalent').style.display='none';
-  g('fiProg').value='';g('fiCurs').value='';g('fiTalent').value='';
+  pendProg=null;pendCurs=null;pendTalent=null;pendMarcas=null;
+  g('uiProg').style.display='none';g('uiCurs').style.display='none';g('uiTalent').style.display='none';g('uiMarcas').style.display='none';
+  g('fiProg').value='';g('fiCurs').value='';g('fiTalent').value='';g('fiMarcas').value='';
   g('modalStorageInfo').innerHTML = getStorageInfo();
   var logSection=g('accessLogSection');
   if(logSection){
@@ -2129,8 +2141,14 @@ function setUpTalentFile(file){
   pendTalent=file;g('uiTalentName').textContent=file.name;g('uiTalentSize').textContent=' - '+sz;g('uiTalent').style.display='block';
 }
 
+function setUpMarcasFile(file){
+  if(!file.name.match(/\.(xlsx|xls|csv)$/i)){alert('Selecciona un archivo Excel (.xlsx o .xls) o CSV');return;}
+  var sz=(file.size/1024).toFixed(1)+' KB';
+  pendMarcas=file;g('uiMarcasName').textContent=file.name;g('uiMarcasSize').textContent=' - '+sz;g('uiMarcas').style.display='block';
+}
+
 function applyUploads(){
-  if(!pendProg&&!pendCurs&&!pendTalent){alert('Selecciona al menos un archivo.');return;}
+  if(!pendProg&&!pendCurs&&!pendTalent&&!pendMarcas){alert('Selecciona al menos un archivo.');return;}
   closeModal();
   g('loadingOverlay').style.display='flex';
   g('loadingText').textContent='Procesando archivos...';
@@ -2138,6 +2156,7 @@ function applyUploads(){
   if(pendProg)queue.push({file:pendProg,isProg:true});
   if(pendCurs)queue.push({file:pendCurs,isProg:false});
   if(pendTalent)queue.push({file:pendTalent,isTalent:true});
+  if(pendMarcas)queue.push({file:pendMarcas,isMarcas:true});
   processQueue(queue,0);
 }
 function processQueue(queue,idx){
@@ -2153,6 +2172,7 @@ function processQueue(queue,idx){
   var item=queue[idx];
   setTimeout(function(){
     if(item.isTalent) readTalentExcel(item.file,function(){processQueue(queue,idx+1);});
+    else if(item.isMarcas) readMarcasExcel(item.file,function(){processQueue(queue,idx+1);});
     else readExcel(item.file,item.isProg,function(){processQueue(queue,idx+1);});
   },50);
 }
@@ -2491,7 +2511,8 @@ function pMatch(row,skip){
       &&chk('pFSegmento',function(s){return s.indexOf(row.segmento)>=0;})
       &&chk('pFPosicion',function(s){return s.indexOf(row.posicion)>=0;})
       &&chk('pFLegajo',  function(s){return s.indexOf(row.legajo)>=0;})
-      &&chk('pFEstado',  function(s){return s.indexOf(row.estado)>=0;});
+      &&chk('pFEstado',  function(s){return s.indexOf(row.estado)>=0;})
+      &&chk('pFMarca',   function(s){return !mkVisible()||mkTipos(row.legajo).some(function(t){return s.indexOf(t)>=0;});});
 }
 function pHasFilters(){
   for(var i=0;i<P.cfg.length;i++)if(Object.keys(P.fSel[P.cfg[i].id]||{}).length>0)return true;
@@ -2509,6 +2530,7 @@ function pPopulate(){
   setOpts(P,'pFPosicion',P.raw.map(function(r){return r.posicion;}),false,pDoFilter);
   setOpts(P,'pFLegajo',  P.raw.map(function(r){return r.legajo;}),false,pDoFilter);
   setOpts(P,'pFEstado',  ['Completado','No completado'],false,pDoFilter);
+  setOpts(P,'pFMarca',   mkAllTipos(P.raw),false,pDoFilter);
 }
 function pCascade(){
   // Step 1: Update fOpts for each filter silently (no renderMS calls)
@@ -2526,6 +2548,7 @@ function pCascade(){
     else if(id==='pFSegmento') vals=base.map(function(r){return r.segmento;});
     else if(id==='pFPosicion') vals=base.map(function(r){return r.posicion;});
     else if(id==='pFLegajo')   vals=base.map(function(r){return r.legajo;});
+    else if(id==='pFMarca')    vals=mkAllTipos(base);
     else vals=[];
     // Build clean options list
     var seen={},clean=[];
@@ -2571,7 +2594,8 @@ function cMatch(row,skip){
       &&chk('cFPosicion', function(s){return s.indexOf(row.posicion)>=0;})
       &&chk('cFLegajo',   function(s){return s.indexOf(row.legajo)>=0;})
       &&chk('cFEstado',   function(s){return s.indexOf(row.estado)>=0;})
-      &&chk('cFCategoria',function(s){return s.indexOf(row.categoria)>=0;});
+      &&chk('cFCategoria',function(s){return s.indexOf(row.categoria)>=0;})
+      &&chk('cFMarca',    function(s){return !mkVisible()||mkTipos(row.legajo).some(function(t){return s.indexOf(t)>=0;});});
 }
 function cHasFilters(){for(var i=0;i<C.cfg.length;i++)if(Object.keys(C.fSel[C.cfg[i].id]||{}).length>0)return true;return false;}
 function cCountFilters(){var n=0;C.cfg.forEach(function(f){if(Object.keys(C.fSel[f.id]||{}).length>0)n++;});return n;}
@@ -2587,6 +2611,7 @@ function cPopulate(){
   setOpts(C,'cFLegajo',   C.raw.map(function(r){return r.legajo;}),false,cDoFilter);
   setOpts(C,'cFEstado',   ['Completado','No completado'],false,cDoFilter);
   setOpts(C,'cFCategoria',C.raw.map(function(r){return r.categoria;}),false,cDoFilter);
+  setOpts(C,'cFMarca',    mkAllTipos(C.raw),false,cDoFilter);
 }
 function cCascade(){
   C.cfg.forEach(function(f){
@@ -2604,6 +2629,7 @@ function cCascade(){
     else if(id==='cFPosicion') vals=base.map(function(r){return r.posicion;});
     else if(id==='cFLegajo')   vals=base.map(function(r){return r.legajo;});
     else if(id==='cFCategoria')vals=base.map(function(r){return r.categoria;});
+    else if(id==='cFMarca')    vals=mkAllTipos(base);
     else vals=[];
     var seen={},clean=[];
     for(var i=0;i<vals.length;i++){
@@ -3019,7 +3045,7 @@ function pTable(){
     var pc=r.progreso>=80?blend(BASE.orange,'#000000',0.18):r.progreso>=50?BASE.orange:blend(BASE.purple,'#000000',0.1);
     var pb='<div style="display:flex;align-items:center;gap:5px"><div style="width:52px;height:7px;background:#eee;border-radius:3px;overflow:hidden"><div style="width:'+r.progreso+'%;height:100%;background:'+pc+';border-radius:3px"></div></div><span style="font-size:.72rem">'+r.progreso+'%</span></div>';
     h+='<tr><td title="'+esc(r.programa)+'">'+esc(trunc(r.programa,28))+'</td><td>'+esc(r.pais)+'</td>';
-    h+='<td style="white-space:nowrap;font-weight:500">'+esc(r.nombre)+'</td>';
+    h+='<td style="white-space:nowrap;font-weight:500">'+esc(r.nombre)+mkBadge(r.legajo)+'</td>';
     h+='<td><span style="padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:600;white-space:nowrap;'+ec+'">'+r.estado+'</span></td>';
     h+='<td>'+pb+'</td><td>'+esc(r.segmento)+'</td><td title="'+esc(r.depto)+'">'+esc(trunc(r.depto,22))+'</td>';
     h+='<td>'+esc(r.distrito)+'</td><td>'+esc(r.region)+'</td><td>'+esc(r.legajo)+'</td>';
@@ -3206,7 +3232,7 @@ function cTable(){
     var pc=r.progreso>=80?blend(BASE.purple,'#000000',0.15):r.progreso>=50?BASE.purple:blend(BASE.orange,'#000000',0.1);
     var pb='<div style=\"display:flex;align-items:center;gap:5px\"><div style=\"width:52px;height:7px;background:#eee;border-radius:3px;overflow:hidden\"><div style=\"width:'+r.progreso+'%;height:100%;background:'+pc+';border-radius:3px\"></div></div><span style=\"font-size:.72rem\">'+r.progreso+'%</span></div>';
     h+='<tr><td title=\"'+esc(r.curso)+'\">'+esc(trunc(r.curso,30))+'</td><td>'+esc(r.pais)+'</td>';
-    h+='<td style=\"white-space:nowrap;font-weight:500\">'+esc(r.nombre)+'</td>';
+    h+='<td style=\"white-space:nowrap;font-weight:500\">'+esc(r.nombre)+mkBadge(r.legajo)+'</td>';
     h+='<td><span style=\"padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:600;white-space:nowrap;'+ec+'\">'+r.estado+'</span></td>';
     h+='<td>'+pb+'</td><td title=\"'+esc(r.depto)+'\">'+esc(trunc(r.depto,20))+'</td>';
     h+='<td>'+esc(r.distrito)+'</td><td>'+esc(r.legajo)+'</td>';
@@ -3377,6 +3403,106 @@ function restoreTalentData(onDone){
     if(status===200&&data&&data.rows&&data.rows.length) applyTalentData(data.rows,data.meta||{});
     if(onDone)onDone();
   });
+}
+
+
+// ============================================================
+// MARCAS ESPECIALES (05-oct, Corrección 31) — PCD, licencia prolongada, etc.
+// Archivo aparte, opcional, que sube Global desde "Gestionar datos": SOLO Legajo/ID SF y
+// Tipo (sin nombre, tienda, cargo ni ning\u00fan otro dato personal). Se cruza por legajo, igual
+// que Talent Mapping. Dato sensible (salud): se guarda como lista mínima de legajos en
+// 'marcas.json' (mismo bucket que Talent Mapping), la marca en pantalla es un punto discreto
+// con tooltip, NO sale en el Excel exportado, y solo la ven Global y los logins de país
+// (cada uno ya ve \u00fanicamente a las personas de su país); el login "staff" no la ve.
+// ============================================================
+var M={raw:[],byLegajo:{},meta:{}};
+function mkVisible(){ return !!CU && CU!=='staff' && M.raw.length>0; }
+function mkTipos(legajo){ if(!mkVisible()) return []; var m=M.byLegajo[legajo]; return m?m.tipos:[]; }
+function mkAllTipos(rows){ var seen={},out=[]; rows.forEach(function(r){ mkTipos(r.legajo).forEach(function(t){ if(!seen[t]){seen[t]=1;out.push(t);} }); }); return out; }
+function mkColor(t){ var u=normUpper(t); return u.indexOf('PCD')>=0?'#AE90C3':u.indexOf('LICEN')>=0?'#9AA5B1':'#E97132'; }
+function mkBadge(legajo){
+  var t=mkTipos(legajo); if(!t.length) return '';
+  return '<span class="mk-badge" title="'+esc(t.join(' + '))+'" style="background:'+mkColor(t[0])+'"></span>';
+}
+function normMarcaTipo(v){
+  var raw=String(v||'').trim(); if(!raw) return 'Marca especial';
+  var u=normUpper(raw);
+  if(u.indexOf('PCD')>=0||u.indexOf('DISCAP')>=0) return 'PCD';
+  if(u.indexOf('LICEN')>=0) return 'Licencia prolongada';
+  return raw;
+}
+function mapMarcaRow(headers,row){
+  var map={};for(var i=0;i<headers.length;i++)map[nH(headers[i])]=String(row[i]||'').trim();
+  // "LEGAJO SSFF" (encabezado real del listado de PCD) no matchea ningún alias exacto -> fallback difuso.
+  return {legajo:gV(map,['id sf','idsf','legajo','nro documento','id'])||gVContains(map,'legajo')||gVContains(map,'idsf'), tipo:normMarcaTipo(gV(map,['tipo','marca','categoria','motivo']))};
+}
+function readMarcasExcel(file,cb){
+  readExcelRaw(file,function(rows){
+    try{
+      if(!rows||rows.length<2){ alert('El archivo '+file.name+' no tiene datos suficientes.'); cb();return; }
+      var headers=rows[0].map(function(h){return String(h||'').trim();});
+      var mapped=[];
+      for(var i=1;i<rows.length;i++){
+        var cleanRow=rows[i].map(function(v){return String(v===null||v===undefined?'':v).trim();});
+        var r=mapMarcaRow(headers,cleanRow);
+        if(r.legajo)mapped.push(r);
+      }
+      if(!mapped.length){ alert('No se detectaron legajos validos en '+file.name+'.\nVerifica que tenga una columna Legajo (o ID SF) y, opcionalmente, Tipo.'); cb();return; }
+      var now=new Date();
+      var meta={fileName:file.name,loadTime:now.toLocaleString('es-AR'),updateDateFull:fmtFechaLarga(now),rowCount:mapped.length};
+      applyMarcasData(mapped,meta);
+      cb();
+      sbSaveMarcas(mapped,meta,function(){});
+    }catch(err){ console.error(err); alert('Error procesando '+file.name+': '+err.message); cb(); }
+  });
+}
+function mkSyncUI(){
+  var vis=mkVisible();
+  var gp=g('pFMarcaGroup'), gc=g('cFMarcaGroup');
+  if(gp) gp.style.display=vis?'':'none';
+  if(gc) gc.style.display=vis?'':'none';
+  if(P.raw.length) pDoFilter();
+  if(C.raw.length) cDoFilter();
+}
+function applyMarcasData(rows,meta){
+  M.raw=rows; M.meta=meta; M.byLegajo={};
+  rows.forEach(function(r){
+    if(!r.legajo) return;
+    var e=M.byLegajo[r.legajo]||(M.byLegajo[r.legajo]={legajo:r.legajo,tipos:[]});
+    if(e.tipos.indexOf(r.tipo)<0) e.tipos.push(r.tipo);
+  });
+  var infoEl=g('modalStorageInfo');
+  if(infoEl && infoEl.innerHTML) infoEl.innerHTML=getStorageInfo();
+  mkSyncUI();
+}
+function sbSaveMarcas(rows,meta,onDone){
+  var compact=rows.map(function(r){return [r.legajo,r.tipo];});
+  try{ localStorage.setItem('xtc_sb_marcas', JSON.stringify({rows:compact,meta:meta})); }catch(e){}
+  uploadToStorage('marcas.json', JSON.stringify({rows:compact,meta:meta,totalRows:compact.length}), function(ok){ if(onDone)onDone(ok); });
+}
+function restoreMarcasData(onDone){
+  function exp(a){return {legajo:a[0],tipo:a[1]};}
+  try{
+    var raw=localStorage.getItem('xtc_sb_marcas');
+    if(raw){ var c=JSON.parse(raw); if(c&&c.rows&&c.rows.length) applyMarcasData(c.rows.map(exp),c.meta||{}); }
+  }catch(e){}
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',SB_URL+'/storage/v1/object/public/dashboard-files/marcas.json?t='+Date.now());
+  xhr.timeout=15000;
+  xhr.onload=function(){
+    if(xhr.status===200){
+      try{
+        var d=JSON.parse(xhr.responseText);
+        if(d.rows&&d.rows.length){
+          try{ localStorage.setItem('xtc_sb_marcas', JSON.stringify({rows:d.rows,meta:d.meta||{}})); }catch(e){}
+          applyMarcasData(d.rows.map(exp),d.meta||{});
+        }
+      }catch(e){}
+    }
+    if(onDone)onDone();
+  };
+  xhr.onerror=xhr.ontimeout=function(){ if(onDone)onDone(); };
+  xhr.send();
 }
 
 
@@ -4013,6 +4139,7 @@ document.addEventListener('DOMContentLoaded',function(){
   setupUZ('uzProg','fiProg',function(f){setUpFile(f,true);});
   setupUZ('uzCurs','fiCurs',function(f){setUpFile(f,false);});
   setupUZ('uzTalent','fiTalent',function(f){setUpTalentFile(f);});
+  setupUZ('uzMarcas','fiMarcas',function(f){setUpMarcasFile(f);});
   // Prog
   g('pBtnClear').addEventListener('click',pClear);
   g('pBtnMore').addEventListener('click',function(){var sf=g('pSecFilters');sf.classList.toggle('show');g('pMoreIcon').innerHTML=sf.classList.contains('show')?'&#9650;':'&#9660;';});
