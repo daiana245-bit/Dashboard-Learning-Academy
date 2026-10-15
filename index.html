@@ -4805,12 +4805,12 @@ function rmItemStatus(item,stageDias,hireDate,legajo,segmento){
   return {estado:'pendiente',label:'En curso ('+(row.progreso||0)+'%)'};
 }
 var RM_BADGE_META={
-  ok:{bg:'#EAF3DE',fg:'#3B6D11',label:'En plazo',icon:'✓'},
+  ok:{bg:'#EAF3DE',fg:'#3B6D11',label:'Completado en plazo',icon:'✓'},
   tarde:{bg:'#FAEEDA',fg:'#854F0B',label:'Completado tarde',icon:'⏱'},
-  atrasado:{bg:'#FCEBEB',fg:'#A32D2D',label:'Atrasado',icon:'⚠'},
+  atrasado:{bg:'#FCEBEB',fg:'#A32D2D',label:'Pendiente con demora',icon:'⚠'},
   por_vencer:{bg:'#FFEFD1',fg:'#B45309',label:'Vence pronto',icon:'⏰'},
-  pendiente:{bg:'#eee',fg:'#666',label:'Pendiente',icon:'—'},
-  no_iniciado:{bg:'#eee',fg:'#666',label:'Pendiente',icon:'—'},
+  pendiente:{bg:'#eee',fg:'#666',label:'Pendiente en plazo',icon:'—'},
+  no_iniciado:{bg:'#eee',fg:'#666',label:'Pendiente en plazo',icon:'—'},
   sin_config:{bg:'#eee',fg:'#999',label:'Sin configurar',icon:'?'}
 };
 var RM_SEV={ok:0,sin_config:1,no_iniciado:2,pendiente:2,por_vencer:3,tarde:4,atrasado:5};
@@ -4972,10 +4972,10 @@ function rmRenderTimeline(legajo){
   }
 
   g('rmSummary').innerHTML=
-    '<div style="background:#EAF3DE;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#3B6D11">'+counts.ok+'</div><div style="font-size:.68rem;color:#3B6D11;font-weight:600">EN PLAZO</div></div>'+
-    '<div style="background:#FAEEDA;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#854F0B">'+counts.tarde+'</div><div style="font-size:.68rem;color:#854F0B;font-weight:600">TARDE</div></div>'+
-    '<div style="background:#FCEBEB;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#A32D2D">'+counts.atrasado+'</div><div style="font-size:.68rem;color:#A32D2D;font-weight:600">ATRASADO</div></div>'+
-    '<div style="background:#f1f1f1;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#666">'+counts.pendiente+'</div><div style="font-size:.68rem;color:#666;font-weight:600">PENDIENTE</div></div>';
+    '<div style="background:#EAF3DE;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#3B6D11">'+counts.ok+'</div><div style="font-size:.68rem;color:#3B6D11;font-weight:600">COMPLETADO EN PLAZO</div></div>'+
+    '<div style="background:#FAEEDA;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#854F0B">'+counts.tarde+'</div><div style="font-size:.68rem;color:#854F0B;font-weight:600">COMPLETADO TARDE</div></div>'+
+    '<div style="background:#FCEBEB;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#A32D2D">'+counts.atrasado+'</div><div style="font-size:.68rem;color:#A32D2D;font-weight:600">PENDIENTE CON DEMORA</div></div>'+
+    '<div style="background:#f1f1f1;border-radius:10px;padding:12px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:#666">'+counts.pendiente+'</div><div style="font-size:.68rem;color:#666;font-weight:600">PENDIENTE EN PLAZO</div></div>';
   g('rmTimeline').innerHTML=stagesHtml;
 }
 
