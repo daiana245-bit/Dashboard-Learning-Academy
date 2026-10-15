@@ -4642,6 +4642,43 @@ function rmSave(){
 function rmSaveOverallProgram(){
   try{ localStorage.setItem(ROADMAP_OVERALL_KEY,ROADMAP_OVERALL_PROGRAM||''); }catch(e){}
 }
+// ── Configuración compartida del Recorrido (15-oct, Corrección 32) ─────────────────
+// Antes la configuración (qué programa/curso es cada etapa + el programa del "% general") solo
+// vivía en el localStorage del navegador de quien la armaba: los demás logins (ej. Argentina)
+// arrancaban con la plantilla vacía y veían todo "sin configurar" / sin %. Ahora se publica en
+// 'roadmap.json' (mismo bucket y mismo patrón que Talent Mapping / Marcas) y todos la leen al entrar.
+function rmIsConfigured(stages,overall){
+  if(overall) return true;
+  return (stages||[]).some(function(st){ return (st.items||[]).some(function(it){ return it.nombre || (it.reglas||[]).some(function(r){return r.nombre;}); }); });
+}
+function rmPushRemote(){
+  var payload=JSON.stringify({stages:ROADMAP_STAGES,overall:ROADMAP_OVERALL_PROGRAM||'',updated:new Date().toISOString()});
+  uploadToStorage('roadmap.json',payload,function(ok){ if(!ok) console.warn('No se pudo publicar la configuración del Recorrido'); });
+}
+function rmPullRemote(){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',SB_URL+'/storage/v1/object/public/dashboard-files/roadmap.json?t='+Date.now());
+  xhr.timeout=15000;
+  xhr.onload=function(){
+    if(xhr.status===200){
+      try{
+        var d=JSON.parse(xhr.responseText);
+        if(d&&d.stages&&d.stages.length){
+          ROADMAP_STAGES=d.stages; ROADMAP_OVERALL_PROGRAM=d.overall||'';
+          rmSave(); rmSaveOverallProgram();
+          if(RM_SELECTED_LEGAJO) rmRenderTimeline(RM_SELECTED_LEGAJO);
+          return;
+        }
+      }catch(e){}
+    }
+    // Todavía no hay configuración publicada: si este navegador ya la tiene armada, se publica
+    // (una sola vez; si ya existe una publicada nadie la pisa sin guardar desde el modal).
+    if(xhr.status===400||xhr.status===404||xhr.status===200){
+      if(rmIsConfigured(ROADMAP_STAGES,ROADMAP_OVERALL_PROGRAM)) rmPushRemote();
+    }
+  };
+  xhr.send();
+}
 function rmInit(){
   if(!ROADMAP_STAGES.length) rmLoad();
   var cfgBtn=g('rmBtnConfig'); if(cfgBtn) cfgBtn.style.display=(CU==='global')?'inline-block':'none';
@@ -4897,7 +4934,7 @@ function rmRenderTimeline(legajo){
   }else{
     overallEl.textContent='-';
     overallBar.style.width='0%';
-    overallNote.textContent=(CU==='global')?'Configurá qué Programa representa el % general en "⚙ Configurar recorrido".':'Avance general no configurado.';
+    overallNote.textContent=(CU==='global')?'Configurá qué Programa representa el % general en "⚙ Configurar recorrido".':'El recorrido todavía no fue configurado para todos los usuarios. Pedile a un usuario Global que lo configure en "⚙ Configurar recorrido".';
   }
 
   // ── Alert banner: prioritize overdue stages, then upcoming deadlines ──
@@ -4964,6 +5001,7 @@ function rmRenderOverallSelect(){
 function rmCfgSetOverallProgram(val){
   ROADMAP_OVERALL_PROGRAM=val;
   rmSaveOverallProgram();
+  rmPushRemote();
 }
 function rmCloseConfigModal(){ g('rmConfigModal').style.display='none'; }
 function rmBuildNombreOptionsRaw(tipo,nombre){
@@ -5062,6 +5100,7 @@ function rmCfgRemoveItem(si,ii){ RM_CONFIG_DRAFT[si].items.splice(ii,1); rmRende
 function rmSaveConfigModal(){
   ROADMAP_STAGES=RM_CONFIG_DRAFT;
   rmSave();
+  rmPushRemote();
   rmCloseConfigModal();
   if(RM_SELECTED_LEGAJO) rmRenderTimeline(RM_SELECTED_LEGAJO);
 }
@@ -5071,6 +5110,7 @@ var _origEnterDash2=enterDash;
 enterDash=function(){
   _origEnterDash2();
   rmLoad();
+  rmPullRemote();
 };
 </script>
 </body>
