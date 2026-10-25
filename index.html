@@ -215,6 +215,23 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
 .tab-btn.active-gantt{color:#22a06b;border-bottom-color:#22a06b}
 .tab-btn.active-recorrido{color:#E97132;border-bottom-color:#E97132}
 .tab-btn.active-fa{color:#3B82F6;border-bottom-color:#3B82F6}
+.tab-btn.active-navidad{color:#1F6D4F;border-bottom-color:#1F6D4F}
+.nav-hero{background:linear-gradient(120deg,#1F6D4F 0%,#25805D 100%);margin:14px;border-radius:16px;padding:30px 34px;display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;box-shadow:0 4px 18px rgba(31,109,79,.22);color:#FAF6F0}
+.nav-hero-left{flex:1 1 360px;min-width:0}
+.nav-eyebrow{font-size:.66rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#C8C8F0;margin-bottom:8px}
+.nav-hero h2{font-size:2.1rem;font-weight:800;line-height:1.1;margin:0 0 8px;color:#FAF6F0}
+.nav-hero h2 span{color:#C8C8F0}
+.nav-hero p{font-size:.9rem;color:#E4EFE9;max-width:520px;line-height:1.5;margin:0}
+.nav-cta{display:inline-flex;align-items:center;gap:12px;background:#FAF6F0;color:#1F6D4F;font-weight:800;font-size:1.05rem;padding:18px 34px;border-radius:50px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.2);transition:transform .15s,box-shadow .15s;white-space:nowrap}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.26);background:#fff}
+.nav-cta .nav-arrow{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#D93A3A;color:#fff;font-size:1rem}
+.nav-bench{margin:0 14px 14px;background:#f4f7f5;border:1px dashed #b9d3c7;border-radius:10px;padding:9px 14px;font-size:.74rem;color:#5b6f66;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.nav-bench b{color:#3d5a4e}
+.nav-chip{display:inline-block;padding:1px 8px;border-radius:12px;font-weight:700;font-size:.7rem}
+.nav-chip.up{background:#E1F2E9;color:#1F6D4F}.nav-chip.down{background:#FCEBEB;color:#A32D2D}.nav-chip.eq{background:#eee;color:#777}
+.kpi-card.nv{border-top-color:#1F6D4F}.kpi-card.nv2{border-top-color:#D93A3A}.kpi-card.nv3{border-top-color:#AE90C3}
+.kpi-sub{font-size:.66rem;color:#999;margin-top:3px}
+@media(max-width:600px){.nav-hero{padding:22px 18px}.nav-hero h2{font-size:1.6rem}.nav-cta{width:100%;justify-content:center;padding:16px 20px;font-size:.98rem}}
 .gantt-wrap{padding:0 0 80px;background:#f8f9fa;min-height:100vh}
 .gantt-hero{background:#fff;margin:14px 14px 0;border-radius:16px;padding:22px 28px;box-shadow:0 2px 12px rgba(0,0,0,.05);border:1px solid #f0f0f0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .gantt-hero-left .gantt-eyebrow{font-size:.62rem;font-weight:700;color:#22a06b;text-transform:uppercase;letter-spacing:3px;margin-bottom:4px}
@@ -410,7 +427,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
   <div class="loading-text" id="loadingText">Procesando datos...</div>
 </div>
 <div id="uploadModal" class="modal-overlay" style="display:none">
-  <div style="background:#fff;border-radius:16px;padding:28px;width:500px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:500px;max-width:95vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
       <h3 style="font-size:1rem;font-weight:700">Gestionar datos</h3>
       <button id="btnCloseModal" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#888;line-height:1">&times;</button>
@@ -440,6 +457,12 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       <div class="upload-zone" id="uzMarcas"><div class="upload-zone-icon">&#128203;</div><div class="upload-zone-text">Marcas especiales (.xlsx o .csv)</div><div class="upload-zone-sub">Arrastra o haz click &mdash; solo 2 columnas: Legajo (o ID SF) y Tipo (ej. PCD, Licencia prolongada). Sin nombres ni datos personales. Cada carga reemplaza la anterior.</div></div>
       <input type="file" id="fiMarcas" accept=".xlsx,.xls,.csv" style="display:none">
       <div class="upload-info" id="uiMarcas"><strong id="uiMarcasName"></strong><span id="uiMarcasSize" style="color:#aaa"></span></div>
+    </div>
+    <div style="margin-top:14px;border-top:1px dashed #e5e5e5;padding-top:14px">
+      <div style="font-size:.72rem;font-weight:700;color:#3B8F8C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Operación Navidad (opcional)</div>
+      <div class="upload-zone" id="uzNavidad"><div class="upload-zone-icon">&#127876;</div><div class="upload-zone-text">Seguimiento Operación Navidad (.xlsx)</div><div class="upload-zone-sub">Arrastra o haz click &mdash; el Excel exportado del sitio (hojas Participantes, Actividades y Resumen). Cada carga reemplaza la anterior.</div></div>
+      <input type="file" id="fiNavidad" accept=".xlsx,.xls" style="display:none">
+      <div class="upload-info" id="uiNavidad"><strong id="uiNavidadName"></strong><span id="uiNavidadSize" style="color:#aaa"></span></div>
     </div>
     <div id="modalStorageInfo" style="margin-top:12px;background:#f8f8f8;border-radius:8px;padding:10px 14px;font-size:.76rem;color:#666;line-height:1.7"></div>
     <!-- Access log - only shown to global -->
@@ -480,6 +503,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
     <button class="tab-btn" id="tabBtnGantt" style="display:none">📋 Seguimiento</button>
     <button class="tab-btn" id="tabBtnRecorrido">🎯 Recorrido</button>
     <button class="tab-btn" id="tabBtnAnalytics">📈 Formación Analytics</button>
+    <button class="tab-btn" id="tabBtnNavidad">🎄 Operación Navidad</button>
   </div>
   <!-- TAB PROGRAMAS -->
   <div class="tab-content active" id="tabProg">
@@ -609,6 +633,61 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
         </div>
         <div style="overflow-x:auto;max-height:560px;overflow-y:auto"><table class="detail-table" id="cTable"><thead><tr></tr></thead><tbody></tbody></table></div>
         <div class="pagination" id="cPag"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB OPERACION NAVIDAD (Corrección 34) -->
+  <div class="tab-content" id="tabNavidad" style="display:none">
+    <div class="nav-hero">
+      <div class="nav-hero-left">
+        <div class="nav-eyebrow">Bienvenidos a Navidad 2026</div>
+        <h2>Operación <span>Navidad</span></h2>
+        <p>Así vamos a vivir la temporada más importante del año. Entrá al sitio de Operación Navidad con todo el contenido, y abajo seguí la participación de los equipos.</p>
+      </div>
+      <a class="nav-cta" id="navCta" href="https://operacion-navidad-bsg.netlify.app/" target="_blank" rel="noopener noreferrer">Ir a Operación Navidad <span class="nav-arrow">&rarr;</span></a>
+    </div>
+    <div class="data-info-bar" id="dibNav" style="display:none;background:linear-gradient(90deg,#E6F2EC,#DCEEE5);border-bottom:1px solid #A9D1BF;color:#1F6D4F">
+      <span>Archivo: <span id="nvFileName">-</span> &nbsp;|&nbsp; Participantes en el archivo: <span id="nvRowCount">-</span> &nbsp;|&nbsp; Exportado: <span id="nvExported">-</span> &nbsp;|&nbsp; Cargado: <span id="nvLoadTime">-</span></span>
+    </div>
+    <div id="nNoData" class="no-data-state"><div class="nd-icon">&#127876;</div><p id="nNoDataMsg">Todavía no se cargó el archivo de seguimiento de Operación Navidad.</p></div>
+    <div id="nMain" style="display:none">
+      <div class="filters-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.88rem;font-weight:700;color:#444">Filtros</span><span id="nFilterCount" style="font-size:.73rem;color:#1F6D4F;font-weight:600;display:none"></span></div>
+          <button id="nBtnClear" style="background:#f5f5f5;border:1px solid #e0e0e0;padding:4px 12px;border-radius:6px;font-size:.76rem;cursor:pointer;color:#888">Limpiar</button>
+        </div>
+        <div class="filter-grid">
+          <div class="filter-group" id="nFPaisGroup"><label>Pais / Unidad de Negocio</label><div id="nFPais" class="multi-select"></div></div>
+          <div class="filter-group"><label>Distrito</label><div id="nFDistrito" class="multi-select"></div></div>
+          <div class="filter-group"><label>Tienda</label><div id="nFTienda" class="multi-select"></div></div>
+          <div class="filter-group"><label>Nombre</label><div id="nFNombre" class="multi-select"></div></div>
+          <div class="filter-group"><label>Avance</label><div id="nFEstado" class="multi-select"></div></div>
+        </div>
+      </div>
+      <div class="kpi-area">
+        <div class="kpi-main"><div class="kpi-row">
+          <div class="kpi-card nv"><div class="kpi-value" id="nKpiUsers">0</div><div class="kpi-label">Participantes Únicos</div><div class="kpi-sub" id="nKpiUsersSub"></div></div>
+          <div class="kpi-card nv2"><div class="kpi-value" id="nKpiIngreso">-</div><div class="kpi-label">% Ingresó</div><div class="kpi-sub" id="nKpiIngresoSub"></div></div>
+          <div class="kpi-card c3"><div class="kpi-value" id="nKpiAvg">0%</div><div class="kpi-label">Progreso Promedio</div></div>
+          <div class="kpi-card nv3"><div class="kpi-value" id="nKpiFull">0</div><div class="kpi-label">Completaron 100%</div><div class="kpi-sub" id="nKpiFullSub"></div></div>
+          <div class="kpi-card c4"><div class="kpi-value" id="nKpiCaj">0</div><div class="kpi-label">Cajitas Abiertas</div></div>
+          <div class="kpi-card c5"><div class="kpi-value" id="nKpiMin">0</div><div class="kpi-label">Permanencia Prom. (min)</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="nKpiLast" style="font-size:1.05rem;line-height:1.7">-</div><div class="kpi-label">Último Acceso</div></div>
+        </div></div>
+      </div>
+      <div class="nav-bench" id="nBench"></div>
+      <div class="charts-row" id="nChartsRow">
+        <div class="chart-container"><div class="chart-title">Participación <span class="chart-subtitle" id="nCS1">por País</span><span style="font-size:.7rem;color:#aaa;font-weight:400;display:block;margin-top:2px">Color = progreso promedio: verde ≥70%, verde claro 40-69%, rojo &lt;40%</span></div><div style="max-height:440px;overflow-y:auto"><div id="nC1" style="height:300px"></div></div></div>
+        <div class="chart-container" id="nC2Box"><div class="chart-title">Avance por Actividad <span class="chart-subtitle">total general del archivo &mdash; no cambia con los filtros</span></div><div style="max-height:440px;overflow-y:auto"><div id="nC2" style="height:380px"></div></div></div>
+      </div>
+      <div class="table-section">
+        <div class="table-controls">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:.9rem;color:#444">Detalle por Participante</span><span class="page-info" id="nTCount"></span></div>
+          <div style="display:flex;gap:7px"><input type="text" class="table-search" id="nTSearch" placeholder="Buscar..."><button class="btn-export" id="nBtnExp" style="background:#1F6D4F">Exportar Excel</button></div>
+        </div>
+        <div style="overflow-x:auto;max-height:560px;overflow-y:auto"><table class="detail-table" id="nTable" style="min-width:880px"><thead><tr></tr></thead><tbody></tbody></table></div>
+        <div class="pagination" id="nPag"></div>
       </div>
     </div>
   </div>
@@ -1518,6 +1597,8 @@ function getStorageInfo(){
   else info+='Talent Mapping: sin datos guardados';
   if(M.meta&&M.meta.fileName) info+='<br>Marcas especiales: '+M.meta.fileName+' ('+M.meta.loadTime+', '+M.raw.length+' legajos)';
   else info+='<br>Marcas especiales: sin datos guardados';
+  if(N.meta&&N.meta.fileName) info+='<br>Operación Navidad: '+N.meta.fileName+' ('+N.meta.loadTime+', '+N.raw.length+' participantes)';
+  else info+='<br>Operación Navidad: sin datos guardados';
   return info;
 }
 
@@ -2109,7 +2190,8 @@ function loadAccessLog(){
 }
 
 function openModal(){
-  pendProg=null;pendCurs=null;pendTalent=null;pendMarcas=null;
+  pendProg=null;pendCurs=null;pendTalent=null;pendMarcas=null;pendNavidad=null;
+  g('uiNavidad').style.display='none';g('fiNavidad').value='';
   g('uiProg').style.display='none';g('uiCurs').style.display='none';g('uiTalent').style.display='none';g('uiMarcas').style.display='none';
   g('fiProg').value='';g('fiCurs').value='';g('fiTalent').value='';g('fiMarcas').value='';
   g('modalStorageInfo').innerHTML = getStorageInfo();
@@ -2148,7 +2230,7 @@ function setUpMarcasFile(file){
 }
 
 function applyUploads(){
-  if(!pendProg&&!pendCurs&&!pendTalent&&!pendMarcas){alert('Selecciona al menos un archivo.');return;}
+  if(!pendProg&&!pendCurs&&!pendTalent&&!pendMarcas&&!pendNavidad){alert('Selecciona al menos un archivo.');return;}
   closeModal();
   g('loadingOverlay').style.display='flex';
   g('loadingText').textContent='Procesando archivos...';
@@ -2157,6 +2239,7 @@ function applyUploads(){
   if(pendCurs)queue.push({file:pendCurs,isProg:false});
   if(pendTalent)queue.push({file:pendTalent,isTalent:true});
   if(pendMarcas)queue.push({file:pendMarcas,isMarcas:true});
+  if(pendNavidad)queue.push({file:pendNavidad,isNavidad:true});
   processQueue(queue,0);
 }
 function processQueue(queue,idx){
@@ -2173,6 +2256,7 @@ function processQueue(queue,idx){
   setTimeout(function(){
     if(item.isTalent) readTalentExcel(item.file,function(){processQueue(queue,idx+1);});
     else if(item.isMarcas) readMarcasExcel(item.file,function(){processQueue(queue,idx+1);});
+    else if(item.isNavidad) readNavidadExcel(item.file,function(){processQueue(queue,idx+1);});
     else readExcel(item.file,item.isProg,function(){processQueue(queue,idx+1);});
   },50);
 }
@@ -5112,6 +5196,377 @@ enterDash=function(){
   rmLoad();
   rmPullRemote();
 };
+
+// ============================================================
+// OPERACIÓN NAVIDAD (25-oct, Corrección 34)
+// Pestaña nueva con un CTA al sitio de Operación Navidad y un mini dashboard de seguimiento.
+// El archivo (Excel exportado del sitio, hojas Participantes/Actividades/Resumen) es distinto de
+// Programas y Cursos, por eso tiene su propio estado `N`, su propio mapeo y su propio archivo
+// 'navidad.json' en el mismo bucket de Storage — NO toca P ni C. Distrito/Segmento no vienen en el
+// archivo: se cruzan por legajo contra Programas (y Cursos de respaldo). El % de ingreso usa como
+// universo los legajos únicos de Programas dentro del filtro. Alcance por login: Global ve todo;
+// logins de país solo su país; "staff" solo Casa Matriz. "Avance por actividad" es un total general
+// (el archivo no trae el detalle por persona) y por eso solo lo ve Global.
+// ============================================================
+var N=makeState([{id:'nFPais',ph:'Todos'},{id:'nFDistrito',ph:'Todos'},{id:'nFTienda',ph:'Todas'},{id:'nFNombre',ph:'Todos'},{id:'nFEstado',ph:'Todos'}]);
+N.meta={};N.acts=[];N.nomina=0;N.scoped=[];
+var N_SORT={col:null,dir:0};
+var pendNavidad=null;
+var NAV_IDX={p:null,c:null,n:null,map:{},uni:null};
+
+function navResetState(){ var cfg=N.cfg; N=makeState(cfg); N.meta={};N.acts=[];N.nomina=0;N.scoped=[]; N_SORT={col:null,dir:0}; }
+function navParseDT(s){
+  var t=String(s||'').trim(); if(!t) return null;
+  var m=t.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?/); if(!m) return null;
+  var h=m[4]?parseInt(m[4],10):0, mi=m[5]?parseInt(m[5],10):0;
+  var mer=t.match(/\b([ap])\s*\.?\s*m\b/i);
+  if(mer){ var pm=mer[1].toLowerCase()==='p'; if(pm&&h<12)h+=12; if(!pm&&h===12)h=0; }
+  return new Date(parseInt(m[3],10),parseInt(m[2],10)-1,parseInt(m[1],10),h,mi);
+}
+function navFmtDT(d){ if(!d||isNaN(d.getTime())) return '-'; return fmtFecha(d)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function navNum(v){ var n=parseFloat(String(v==null?'':v).replace('%','').replace(',','.')); return isNaN(n)?0:n; }
+function navEstado(r){ return r.progreso>=100?'Completó (100%)':(r.progreso>0?'En progreso':'Sin avance'); }
+
+// ── Lectura del Excel (varias hojas, a diferencia de readExcelRaw que lee solo la primera) ──
+function navSheetRows(wb,key){
+  for(var i=0;i<wb.SheetNames.length;i++){
+    if(nH(wb.SheetNames[i])===key) return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[i]],{header:1,raw:false,defval:''});
+  }
+  return null;
+}
+function navMapRow(headers,row){
+  var map={};for(var i=0;i<headers.length;i++)map[nH(headers[i])]=String(row[i]==null?'':row[i]).trim();
+  var ult=gV(map,['Ultimo acceso','Último acceso','Last access']);
+  return {
+    legajo:gV(map,['Legajo','ID SF','ID SSFF'])||gVContains(map,'legajo')||gVContains(map,'idsf'),
+    nombre:gV(map,['Nombre','Nombre completo']),
+    pais:gV(map,['Pais','País']),
+    marca:gV(map,['Marca']),
+    tienda:gV(map,['Tienda','Departamento']),
+    cajitas:navNum(gV(map,['Cajitas abiertas','Cajitas'])),
+    progreso:navNum(gV(map,['% progreso','Progreso'])),
+    minutos:navNum(gV(map,['Tiempo de permanencia (min, aprox.)'])||gVContains(map,'permanencia')),
+    ultimo:ult, ultimoDate:navParseDT(ult)
+  };
+}
+function readNavidadExcel(file,cb){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var prow=navSheetRows(wb,'participantes');
+      if(!prow||prow.length<2){ alert('No se encontró la hoja "Participantes" con datos en '+file.name+'.'); cb(); return; }
+      var headers=prow[0].map(function(h){return String(h||'').trim();});
+      var rows=[];
+      for(var i=1;i<prow.length;i++){ var r=navMapRow(headers,prow[i]); if(r.legajo&&r.nombre) rows.push(r); }
+      if(!rows.length){ alert('No se detectaron participantes válidos en '+file.name+'.\nVerificá que la hoja Participantes tenga las columnas Legajo y Nombre.'); cb(); return; }
+      var acts=[]; var arow=navSheetRows(wb,'actividades');
+      if(arow){ for(var j=1;j<arow.length;j++){ var a=arow[j]; if(a[0]) acts.push([String(a[0]).trim(),navNum(a[1]),navNum(a[2])]); } }
+      var nomina=0,exportado=''; var res=navSheetRows(wb,'resumen');
+      if(res){ res.forEach(function(x){ var k=nH(x[0]); if(k==='nominauniverso') nomina=parseInt(String(x[1]).replace(/\D/g,''),10)||0; if(k==='exportadoel') exportado=String(x[1]||'').trim(); }); }
+      var now=new Date();
+      var meta={fileName:file.name,loadTime:now.toLocaleString('es-AR'),updateDateFull:fmtFechaLarga(now),rowCount:rows.length,nomina:nomina,exportado:exportado,acts:acts};
+      applyNavidadData(rows,meta);
+      cb();
+      sbSaveNavidad(rows,meta,function(){});
+    }catch(err){ console.error(err); alert('Error procesando '+file.name+': '+err.message); cb(); }
+  };
+  reader.onerror=function(){ alert('Error leyendo el archivo.'); cb(); };
+  reader.readAsArrayBuffer(file);
+}
+function applyNavidadData(rows,meta){
+  N.raw=rows; N.meta=meta||{}; N.acts=(meta&&meta.acts)||[]; N.nomina=(meta&&meta.nomina)||0;
+  NAV_IDX.n=null;
+  var infoEl=g('modalStorageInfo'); if(infoEl&&infoEl.innerHTML) infoEl.innerHTML=getStorageInfo();
+  navDoFilter();
+}
+function sbSaveNavidad(rows,meta,onDone){
+  var compact=rows.map(function(r){return [r.legajo,r.nombre,r.pais,r.marca,r.tienda,r.cajitas,r.progreso,r.minutos,r.ultimo];});
+  try{ localStorage.setItem('xtc_sb_navidad',JSON.stringify({rows:compact,meta:meta})); }catch(e){}
+  uploadToStorage('navidad.json',JSON.stringify({rows:compact,meta:meta,totalRows:compact.length}),function(ok){ if(onDone)onDone(ok); });
+}
+function navExpand(a){ return {legajo:a[0],nombre:a[1],pais:a[2],marca:a[3],tienda:a[4],cajitas:a[5],progreso:a[6],minutos:a[7],ultimo:a[8],ultimoDate:navParseDT(a[8])}; }
+function restoreNavidadData(onDone){
+  try{
+    var raw=localStorage.getItem('xtc_sb_navidad');
+    if(raw){ var c=JSON.parse(raw); if(c&&c.rows&&c.rows.length) applyNavidadData(c.rows.map(navExpand),c.meta||{}); }
+  }catch(e){}
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',SB_URL+'/storage/v1/object/public/dashboard-files/navidad.json?t='+Date.now());
+  xhr.timeout=15000;
+  xhr.onload=function(){
+    if(xhr.status===200){
+      try{
+        var d=JSON.parse(xhr.responseText);
+        if(d.rows&&d.rows.length){
+          try{ localStorage.setItem('xtc_sb_navidad',JSON.stringify({rows:d.rows,meta:d.meta||{}})); }catch(e){}
+          applyNavidadData(d.rows.map(navExpand),d.meta||{});
+        }
+      }catch(e){}
+    }
+    if(onDone)onDone();
+  };
+  xhr.onerror=xhr.ontimeout=function(){ if(onDone)onDone(); };
+  xhr.send();
+}
+function setUpNavidadFile(file){
+  if(!file.name.match(/\.(xlsx|xls)$/i)){alert('Seleccioná el Excel (.xlsx) exportado del sitio de Operación Navidad.');return;}
+  var sz=(file.size/1024).toFixed(1)+' KB';
+  pendNavidad=file;g('uiNavidadName').textContent=file.name;g('uiNavidadSize').textContent=' - '+sz;g('uiNavidad').style.display='block';
+}
+
+// ── Alcance por login + cruce con Programas ──
+function navScopeRows(){
+  if(!CU) return [];
+  var L=LOGINS[CU]||{};
+  if(L.viewMode==='staff') return N.raw.filter(function(r){return normUpper(r.pais)==='CASA MATRIZ';});
+  if(CF&&CF.length) return N.raw.filter(function(r){return CF.indexOf(normUpper(r.pais))>=0;});
+  return N.raw;
+}
+function navCanSeeActs(){ return CU==='global'; }
+function navPrepare(){
+  if(NAV_IDX.p===P.raw&&NAV_IDX.c===C.raw&&NAV_IDX.n===N.raw) return;
+  var m={},uni={},hasP=false;
+  function put(r,over){
+    if(!r.legajo) return;
+    var e=m[r.legajo]||(m[r.legajo]={distrito:'',segmento:'',depto:'',pais:''});
+    if(over||!e.distrito) e.distrito=e.distrito||r.distrito||'';
+    if(!e.segmento) e.segmento=r.segmento||'';
+    if(!e.depto) e.depto=r.depto||'';
+    if(!e.pais) e.pais=r.pais||'';
+  }
+  (C.raw||[]).forEach(function(r){put(r,false);});
+  (P.raw||[]).forEach(function(r){ hasP=true; put(r,true); if(r.legajo&&!uni[r.legajo]) uni[r.legajo]={pais:r.pais||'',distrito:r.distrito||'',depto:r.depto||''}; });
+  // Programas manda sobre Cursos: se re-aplican sus valores no vacíos
+  (P.raw||[]).forEach(function(r){ var e=m[r.legajo]; if(!e) return; if(r.distrito) e.distrito=r.distrito; if(r.segmento) e.segmento=r.segmento; if(r.depto) e.depto=r.depto; });
+  NAV_IDX.map=m; NAV_IDX.uni=hasP?uni:null; NAV_IDX.p=P.raw; NAV_IDX.c=C.raw; NAV_IDX.n=N.raw;
+  N.raw.forEach(function(r){ var e=m[r.legajo]; r.distrito=(e&&e.distrito)||'Sin dato'; r.segmento=(e&&e.segmento)||''; r.deptoP=(e&&e.depto)||''; });
+}
+
+// ── Filtros en cascada (mismo patrón que pCascade) ──
+function nGetSel(id){return Object.keys(N.fSel[id]||{});}
+function navMatch(r,skip){
+  function chk(id,fn){if(id===skip)return true;var s=nGetSel(id);return !s.length||fn(s);}
+  return chk('nFPais',function(s){return s.indexOf(r.pais)>=0;})
+      &&chk('nFDistrito',function(s){return s.indexOf(r.distrito)>=0;})
+      &&chk('nFTienda',function(s){return s.indexOf(r.tienda)>=0;})
+      &&chk('nFNombre',function(s){return s.indexOf(r.nombre)>=0;})
+      &&chk('nFEstado',function(s){return s.indexOf(navEstado(r))>=0;});
+}
+function navHasFilters(){for(var i=0;i<N.cfg.length;i++)if(nGetSel(N.cfg[i].id).length>0)return true;return false;}
+function navCascade(){
+  N.cfg.forEach(function(f){
+    var id=f.id;
+    var base=N.scoped.filter(function(r){return navMatch(r,id);});
+    var vals;
+    if(id==='nFPais') vals=base.map(function(r){return r.pais;});
+    else if(id==='nFDistrito') vals=base.map(function(r){return r.distrito;});
+    else if(id==='nFTienda') vals=base.map(function(r){return r.tienda;});
+    else if(id==='nFNombre') vals=base.map(function(r){return r.nombre;});
+    else if(id==='nFEstado') vals=['Completó (100%)','En progreso','Sin avance'];
+    else vals=[];
+    var seen={},clean=[];
+    for(var i=0;i<vals.length;i++){var v=String(vals[i]||'').trim();if(v&&v!=='-'&&!seen[v]){seen[v]=1;clean.push(v);}}
+    for(var k in (N.fSel[id]||{})){if(!seen[k]){seen[k]=1;clean.push(k);}}
+    clean.sort(function(a,b){return a.localeCompare(b,'es');});
+    N.fOpts[id]=clean;
+  });
+  N.cfg.forEach(function(f){renderMS(N,f.id,navDoFilter);});
+}
+var _nvt=null;
+function navDoFilter(){clearTimeout(_nvt);_nvt=setTimeout(_navFilter,120);}
+function _navFilter(){
+  navPrepare();
+  var has=N.raw.length>0;
+  g('nNoData').style.display=has?'none':'';
+  g('nMain').style.display=has?'':'none';
+  g('dibNav').style.display=has?'':'none';
+  if(!has){
+    g('nNoDataMsg').innerHTML=(CU==='global')?'Todavía no se cargó el archivo de seguimiento.<br>Subilo desde <strong>Gestionar datos</strong> (zona "Operación Navidad").':'Todavía no hay datos de seguimiento de Operación Navidad.';
+    return;
+  }
+  N.scoped=navScopeRows();
+  var pg=g('nFPaisGroup'); if(pg) pg.style.display=(CF&&CF.length===1)?'none':'';
+  g('nvFileName').textContent=N.meta.fileName||'-';
+  g('nvRowCount').textContent=String(N.raw.length);
+  g('nvExported').textContent=N.meta.exportado||'-';
+  g('nvLoadTime').textContent=N.meta.loadTime||'-';
+  navCascade();
+  N.filt=N.scoped.filter(function(r){return navMatch(r,null);});
+  N.page=1;N_SORT={col:null,dir:0};
+  var nf=0;N.cfg.forEach(function(f){if(nGetSel(f.id).length)nf++;});
+  var fc=g('nFilterCount'); fc.style.display=nf?'inline':'none'; fc.textContent=nf?(nf+' filtro'+(nf>1?'s':'')+' activo'+(nf>1?'s':'')):'';
+  navKPIs();navBench();navCharts();navTable();
+}
+function navClear(){N.cfg.forEach(function(f){N.fSel[f.id]={};});navDoFilter();}
+
+// ── Universo (nómina) para % de ingreso: legajos únicos de Programas dentro de los filtros geográficos ──
+function navUniverse(){
+  if(nGetSel('nFNombre').length||nGetSel('nFEstado').length) return null;
+  if(!NAV_IDX.uni) return (!navHasFilters()&&CU==='global'&&N.nomina)?N.nomina:null;
+  var sP=nGetSel('nFPais').map(normUpper), sD=nGetSel('nFDistrito'), sT=nGetSel('nFTienda');
+  var tset={};
+  sT.forEach(function(t){ tset[normUpper(t)]=1; });
+  N.scoped.forEach(function(r){ if(sT.indexOf(r.tienda)>=0&&r.deptoP) tset[normUpper(r.deptoP)]=1; });
+  // Sin filtro de país, un login de país ya trae su alcance en Programas; Global/staff cuentan todo Programas.
+  var n=0;
+  for(var k in NAV_IDX.uni){
+    var u=NAV_IDX.uni[k];
+    if(sP.length&&sP.indexOf(normUpper(u.pais))<0) continue;
+    if(sD.length&&sD.indexOf(u.distrito)<0) continue;
+    if(sT.length&&!tset[normUpper(u.depto)]) continue;
+    n++;
+  }
+  return n;
+}
+function navStats(rows){
+  var n=rows.length,s=0,full=0,caj=0,min=0,last=null;
+  rows.forEach(function(r){s+=r.progreso;if(r.progreso>=100)full++;caj+=r.cajitas;min+=r.minutos;if(r.ultimoDate&&(!last||r.ultimoDate>last))last=r.ultimoDate;});
+  return {n:n,avg:n?Math.round(s/n):0,full:full,fullPct:n?Math.round(full*100/n):0,caj:caj,min:n?Math.round(min/n):0,last:last};
+}
+function navKPIs(){
+  var st=navStats(N.filt), uni=navUniverse();
+  g('nKpiUsers').textContent=st.n.toLocaleString();
+  g('nKpiAvg').textContent=st.avg+'%';
+  g('nKpiFull').textContent=st.full.toLocaleString();
+  g('nKpiFullSub').textContent=st.n?(st.fullPct+'% de los participantes'):'';
+  g('nKpiCaj').textContent=st.caj.toLocaleString();
+  g('nKpiMin').textContent=st.min;
+  g('nKpiLast').textContent=navFmtDT(st.last);
+  if(uni&&uni>0){
+    var pct=Math.min(100,st.n*100/uni);
+    g('nKpiIngreso').textContent=(pct<10?pct.toFixed(1):Math.round(pct))+'%';
+    g('nKpiUsersSub').textContent='de '+uni.toLocaleString()+' en nómina';
+    g('nKpiIngresoSub').textContent=st.n+' de '+uni.toLocaleString();
+  }else{
+    g('nKpiIngreso').textContent='-';
+    g('nKpiUsersSub').textContent='';
+    g('nKpiIngresoSub').textContent=NAV_IDX.uni?'no aplica con este filtro':'requiere Programas cargado';
+  }
+}
+function navDelta(a,b){var d=a-b;return '<span class="nav-chip '+(d>0?'up':d<0?'down':'eq')+'">'+(d>0?'▲ +':d<0?'▼ ':'= ')+d+' pp</span>';}
+function navBench(){
+  var el=g('nBench'); var base=navStats(N.scoped), cur=navStats(N.filt);
+  var lbl=(CF&&CF.length===1)?'tu país':'total';
+  var h='<span>Referencia general ('+lbl+', sin filtros): <b>'+base.n+'</b> participantes</span><span>Progreso prom. <b>'+base.avg+'%</b></span><span>Completaron 100%: <b>'+base.full+'</b> ('+base.fullPct+'%)</span><span>Permanencia <b>'+base.min+' min</b></span>';
+  if(navHasFilters()&&cur.n) h+='<span>Tu selección vs. general: progreso '+navDelta(cur.avg,base.avg)+' &nbsp; completaron 100% '+navDelta(cur.fullPct,base.fullPct)+'</span>';
+  el.innerHTML=h;
+}
+
+// ── Gráficos ──
+function navCharts(){
+  try{ navC1(); }catch(e){ console.error('fallo nC1',e); }
+  try{ navC2(); }catch(e){ console.error('fallo nC2',e); }
+}
+function navC1(){
+  var sP=nGetSel('nFPais'),sD=nGetSel('nFDistrito');
+  var lvl,sub;
+  if(!sP.length&&!(CF&&CF.length===1)&&!sD.length){lvl='pais';sub='por País';}
+  else if(!sD.length){lvl='distrito';sub='por Distrito';}
+  else{lvl='tienda';sub='por Tienda';}
+  g('nCS1').textContent=sub;
+  var grp={};N.filt.forEach(function(r){var k=r[lvl]||'Sin dato';if(!grp[k])grp[k]={n:0,s:0};grp[k].n++;grp[k].s+=r.progreso;});
+  var items=Object.keys(grp).map(function(k){return{l:k,n:grp[k].n,p:Math.round(grp[k].s/grp[k].n)};}).sort(function(a,b){return a.n-b.n;});
+  if(!items.length){Plotly.purge('nC1');return;}
+  g('nC1').style.height=Math.max(260,items.length*30+70)+'px';
+  Plotly.newPlot('nC1',[{type:'bar',orientation:'h',y:items.map(function(i){return i.l;}),x:items.map(function(i){return i.n;}),
+    marker:{color:items.map(function(i){return i.p>=70?'#1F6D4F':i.p>=40?'#4FA37F':'#D93A3A';})},
+    text:items.map(function(i){return i.n+' · '+i.p+'%';}),textposition:'outside',cliponaxis:false,
+    customdata:items.map(function(i){return i.p;}),hovertemplate:'<b>%{y}</b><br>Participantes: %{x}<br>Progreso prom.: %{customdata}%<extra></extra>'}],
+    {margin:{t:10,b:36,l:10,r:60},xaxis:{title:'Participantes (etiqueta: participantes · progreso prom.)',rangemode:'tozero'},yaxis:{automargin:true},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},
+    {displayModeBar:false,responsive:true});
+}
+function navC2(){
+  var box=g('nC2Box');
+  if(!navCanSeeActs()||!N.acts.length){ box.style.display='none'; Plotly.purge('nC2'); return; }
+  box.style.display='';
+  var items=N.acts.slice().sort(function(a,b){return a[2]-b[2];});
+  g('nC2').style.height=Math.max(300,items.length*30+70)+'px';
+  Plotly.newPlot('nC2',[{type:'bar',orientation:'h',y:items.map(function(i){return i[0];}),x:items.map(function(i){return i[2];}),
+    marker:{color:'#AE90C3'},text:items.map(function(i){return i[1]+' · '+i[2]+'%';}),textposition:'outside',cliponaxis:false,
+    hovertemplate:'<b>%{y}</b><br>%{x}% de los participantes<extra></extra>'}],
+    {margin:{t:10,b:36,l:10,r:70},xaxis:{title:'% de participantes que la completaron',range:[0,100]},yaxis:{automargin:true},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},
+    {displayModeBar:false,responsive:true});
+}
+
+// ── Tabla ──
+function navSorted(data){
+  var c=N_SORT.col,d=N_SORT.dir; if(!c||!d) return data;
+  return data.slice().sort(function(a,b){
+    var av=a[c],bv=b[c];
+    if(c==='cajitas'||c==='progreso'||c==='minutos') return d*((av||0)-(bv||0));
+    if(c==='ultimoDate'){ av=av?av.getTime():0; bv=bv?bv.getTime():0; return d*(av-bv); }
+    return d*String(av||'').toLowerCase().localeCompare(String(bv||'').toLowerCase(),'es');
+  });
+}
+function navTable(){
+  var s=g('nTSearch').value.trim().toLowerCase();
+  var data=N.filt;
+  if(s)data=data.filter(function(r){return (r.nombre+' '+r.legajo+' '+r.tienda+' '+r.distrito+' '+r.pais).toLowerCase().indexOf(s)>=0;});
+  data=navSorted(data);
+  var tp=Math.ceil(data.length/PS);if(N.page>tp)N.page=tp||1;
+  var pd=data.slice((N.page-1)*PS,N.page*PS);
+  g('nTCount').textContent=data.length.toLocaleString()+' participantes';
+  var ss=N_SORT;
+  document.querySelector('#nTable thead tr').innerHTML=
+    mkSortHeader('Legajo','legajo',ss,navTable)+mkSortHeader('Nombre','nombre',ss,navTable)+mkSortHeader('Pais','pais',ss,navTable)+
+    mkSortHeader('Distrito','distrito',ss,navTable)+mkSortHeader('Tienda','tienda',ss,navTable)+mkSortHeader('Cajitas','cajitas',ss,navTable)+
+    mkSortHeader('Progreso','progreso',ss,navTable)+mkSortHeader('Permanencia (min)','minutos',ss,navTable)+mkSortHeader('Ultimo acceso','ultimoDate',ss,navTable);
+  document.querySelectorAll('#nTable thead th.sortable').forEach(function(th){th.addEventListener('click',function(){handleSort(th,N_SORT,navTable);});});
+  var h='';
+  pd.forEach(function(r){
+    var pc=r.progreso>=100?'#1F6D4F':r.progreso>=50?'#4FA37F':'#D93A3A';
+    var pb='<div style="display:flex;align-items:center;gap:5px"><div style="width:52px;height:7px;background:#eee;border-radius:3px;overflow:hidden"><div style="width:'+Math.min(100,r.progreso)+'%;height:100%;background:'+pc+';border-radius:3px"></div></div><span style="font-size:.72rem">'+r.progreso+'%</span></div>';
+    h+='<tr><td style="white-space:nowrap">'+esc(r.legajo)+'</td><td style="font-weight:500;min-width:170px">'+esc(r.nombre)+'</td><td style="white-space:nowrap">'+esc(r.pais)+'</td><td>'+esc(r.distrito)+'</td><td title="'+esc(r.tienda)+'">'+esc(trunc(r.tienda,34))+'</td><td>'+r.cajitas+'</td><td>'+pb+'</td><td>'+r.minutos+'</td><td style="white-space:nowrap">'+navFmtDT(r.ultimoDate)+'</td></tr>';
+  });
+  document.querySelector('#nTable tbody').innerHTML=h||'<tr><td colspan="9" style="text-align:center;color:#aaa;padding:24px">Sin resultados</td></tr>';
+  mkPag('nPag',N,tp,navTable);
+}
+function navExport(){
+  var hdr=['Legajo','Nombre','Pais','Distrito','Tienda','Cajitas abiertas','% progreso','Permanencia (min)','Ultimo acceso'];
+  var rows=navSorted(N.filt).map(function(r){return [r.legajo,r.nombre,r.pais,r.distrito,r.tienda,r.cajitas,r.progreso,r.minutos,r.ultimo];});
+  downloadXLSX(hdr,rows,'operacion_navidad_export.xlsx','Participantes');
+}
+
+// ── Pestaña: mostrar/ocultar y enganches (sin tocar showTab* originales: se envuelven) ──
+function navHide(){
+  var el=g('tabNavidad'); if(el) el.style.display='none';
+  var b=g('tabBtnNavidad'); if(b&&b.className.indexOf('active-navidad')>=0) b.className='tab-btn';
+}
+function showTabNavidad(){
+  ['tabProg','tabCurs'].forEach(function(id){var el=g(id);if(el){el.classList.remove('active');el.style.display='none';}});
+  ['tabGantt','tabRecorrido','tabAnalytics'].forEach(function(id){var el=g(id);if(el)el.style.display='none';});
+  document.querySelectorAll('.tab-nav .tab-btn').forEach(function(b){b.className='tab-btn';});
+  g('tabBtnNavidad').className='tab-btn active-navidad';
+  g('tabNavidad').style.display='block';
+  navDoFilter();
+  setTimeout(function(){['nC1','nC2'].forEach(function(id){var el=document.getElementById(id);if(el&&el.data)Plotly.Plots.resize(el);});},150);
+}
+['showTabProg','showTabCurs','showTabGantt','showTabRecorrido','showTabAnalytics'].forEach(function(fn){
+  var o=window[fn]; if(typeof o!=='function') return;
+  window[fn]=function(){ navHide(); return o.apply(this,arguments); };
+});
+var _navOrigEnterDash=enterDash;
+enterDash=function(){
+  _navOrigEnterDash();
+  initMSForState(N,navDoFilter);
+  restoreNavidadData(function(){});
+};
+var _navOrigLogout=doLogout;
+doLogout=function(){ _navOrigLogout(); navResetState(); pendNavidad=null; navHide(); };
+document.addEventListener('DOMContentLoaded',function(){
+  var b=g('tabBtnNavidad'); if(b) b.addEventListener('click',showTabNavidad);
+  g('nBtnClear').addEventListener('click',navClear);
+  g('nTSearch').addEventListener('input',navTable);
+  g('nBtnExp').addEventListener('click',navExport);
+  setupUZ('uzNavidad','fiNavidad',function(f){setUpNavidadFile(f);});
+  window.addEventListener('resize',function(){['nC1','nC2'].forEach(function(id){var el=document.getElementById(id);if(el&&el.data)Plotly.Plots.resize(el);});});
+});
+
+['refreshTabProg','refreshTabCurs'].forEach(function(fn){
+  var o=window[fn]; if(typeof o!=='function') return;
+  window[fn]=function(){ var r=o.apply(this,arguments); try{ if(N.raw.length) navDoFilter(); }catch(e){} return r; };
+});
 </script>
 </body>
 </html>
