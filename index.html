@@ -667,9 +667,11 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       </div>
       <div class="kpi-area">
         <div class="kpi-main"><div class="kpi-row">
-          <div class="kpi-card nv"><div class="kpi-value" id="nKpiUsers">0</div><div class="kpi-label">Participantes Únicos</div><div class="kpi-sub" id="nKpiUsersSub"></div></div>
+          <div class="kpi-card"><div class="kpi-value" id="nKpiNomina">-</div><div class="kpi-label">Nómina</div><div class="kpi-sub" id="nKpiNominaSub"></div></div>
+          <div class="kpi-card nv"><div class="kpi-value" id="nKpiUsers">0</div><div class="kpi-label">Ingresaron</div><div class="kpi-sub" id="nKpiUsersSub"></div></div>
           <div class="kpi-card nv2"><div class="kpi-value" id="nKpiIngreso">-</div><div class="kpi-label">% Ingresó</div><div class="kpi-sub" id="nKpiIngresoSub"></div></div>
-          <div class="kpi-card c3"><div class="kpi-value" id="nKpiAvg">0%</div><div class="kpi-label">Progreso Promedio</div></div>
+          <div class="kpi-card c2"><div class="kpi-value" id="nKpiNo">-</div><div class="kpi-label">No Ingresaron</div><div class="kpi-sub" id="nKpiNoSub"></div></div>
+          <div class="kpi-card c3"><div class="kpi-value" id="nKpiAvg">0%</div><div class="kpi-label">Progreso Promedio</div><div class="kpi-sub">de quienes ingresaron</div></div>
           <div class="kpi-card nv3"><div class="kpi-value" id="nKpiFull">0</div><div class="kpi-label">Completaron 100%</div><div class="kpi-sub" id="nKpiFullSub"></div></div>
           <div class="kpi-card c4"><div class="kpi-value" id="nKpiCaj">0</div><div class="kpi-label">Cajitas Abiertas</div></div>
           <div class="kpi-card c5"><div class="kpi-value" id="nKpiMin">0</div><div class="kpi-label">Permanencia Prom. (min)</div></div>
@@ -678,7 +680,7 @@ table.detail-table th.sort-desc::after{content:' \25BC';font-size:.6rem;color:#E
       </div>
       <div class="nav-bench" id="nBench"></div>
       <div class="charts-row" id="nChartsRow">
-        <div class="chart-container"><div class="chart-title">Participación <span class="chart-subtitle" id="nCS1">por País</span><span style="font-size:.7rem;color:#aaa;font-weight:400;display:block;margin-top:2px">Color = progreso promedio: verde ≥70%, verde claro 40-69%, rojo &lt;40%</span></div><div style="max-height:440px;overflow-y:auto"><div id="nC1" style="height:300px"></div></div></div>
+        <div class="chart-container"><div class="chart-title">Participación <span class="chart-subtitle" id="nCS1">por País</span></div><div style="max-height:440px;overflow-y:auto"><div id="nC1" style="height:300px"></div></div></div>
         <div class="chart-container" id="nC2Box"><div class="chart-title">Avance por Actividad <span class="chart-subtitle">total general del archivo &mdash; no cambia con los filtros</span></div><div style="max-height:440px;overflow-y:auto"><div id="nC2" style="height:380px"></div></div></div>
       </div>
       <div class="table-section">
@@ -5225,7 +5227,7 @@ function navParseDT(s){
 }
 function navFmtDT(d){ if(!d||isNaN(d.getTime())) return '-'; return fmtFecha(d)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function navNum(v){ var n=parseFloat(String(v==null?'':v).replace('%','').replace(',','.')); return isNaN(n)?0:n; }
-function navEstado(r){ return r.progreso>=100?'Completó (100%)':(r.progreso>0?'En progreso':'Sin avance'); }
+function navEstado(r){ if(r.ingreso===false) return 'No ingresó'; return r.progreso>=100?'Completó (100%)':(r.progreso>0?'En progreso':'Sin avance'); }
 
 // ── Lectura del Excel (varias hojas, a diferencia de readExcelRaw que lee solo la primera) ──
 function navSheetRows(wb,key){
@@ -5315,32 +5317,60 @@ function setUpNavidadFile(file){
   pendNavidad=file;g('uiNavidadName').textContent=file.name;g('uiNavidadSize').textContent=' - '+sz;g('uiNavidad').style.display='block';
 }
 
-// ── Alcance por login + cruce con Programas ──
+// ── Alcance por login + cruce con Programas + nómina ──
+// NÓMINA (06-nov): el archivo solo trae a quienes ingresaron. La nómina real se arma como la UNIÓN de
+// los legajos únicos de Programas (ya recortados por el login) y los participantes del archivo; quienes
+// están en Programas y no en el archivo quedan como "No ingresó". Así % ingresó = ingresaron / nómina y
+// todo (filtros, gráficos, tabla, export) usa la misma base. Si Programas no está cargado no hay nómina
+// y se muestra "-" (salvo Global sin filtros, que usa el total del archivo).
+function navTitle(t){ return String(t||'').toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();}); }
 function navScopeRows(){
   if(!CU) return [];
   var L=LOGINS[CU]||{};
-  if(L.viewMode==='staff') return N.raw.filter(function(r){return normUpper(r.pais)==='CASA MATRIZ';});
-  if(CF&&CF.length) return N.raw.filter(function(r){return CF.indexOf(normUpper(r.pais))>=0;});
-  return N.raw;
+  var ok;
+  if(L.viewMode==='staff') ok=function(r){return normUpper(r.pais)==='CASA MATRIZ';};
+  else if(CF&&CF.length) ok=function(r){return CF.indexOf(normUpper(r.pais))>=0;};
+  else ok=function(){return true;};
+  return N.raw.filter(ok).concat((NAV_IDX.roster||[]).filter(ok));
 }
 function navCanSeeActs(){ return CU==='global'; }
+function navHasRoster(){ return N.scoped.some(function(r){return !r.ingreso;}); }
 function navPrepare(){
   if(NAV_IDX.p===P.raw&&NAV_IDX.c===C.raw&&NAV_IDX.n===N.raw) return;
   var m={},uni={},hasP=false;
-  function put(r,over){
+  function put(r){
     if(!r.legajo) return;
-    var e=m[r.legajo]||(m[r.legajo]={distrito:'',segmento:'',depto:'',pais:''});
-    if(over||!e.distrito) e.distrito=e.distrito||r.distrito||'';
+    var e=m[r.legajo]||(m[r.legajo]={distrito:'',segmento:'',depto:'',pais:'',nombre:''});
+    if(!e.distrito) e.distrito=r.distrito||'';
     if(!e.segmento) e.segmento=r.segmento||'';
     if(!e.depto) e.depto=r.depto||'';
     if(!e.pais) e.pais=r.pais||'';
+    if(!e.nombre) e.nombre=r.nombre||'';
   }
-  (C.raw||[]).forEach(function(r){put(r,false);});
-  (P.raw||[]).forEach(function(r){ hasP=true; put(r,true); if(r.legajo&&!uni[r.legajo]) uni[r.legajo]={pais:r.pais||'',distrito:r.distrito||'',depto:r.depto||''}; });
+  (C.raw||[]).forEach(put);
+  (P.raw||[]).forEach(function(r){ hasP=true; put(r); if(r.legajo&&!uni[r.legajo]) uni[r.legajo]=1; });
   // Programas manda sobre Cursos: se re-aplican sus valores no vacíos
-  (P.raw||[]).forEach(function(r){ var e=m[r.legajo]; if(!e) return; if(r.distrito) e.distrito=r.distrito; if(r.segmento) e.segmento=r.segmento; if(r.depto) e.depto=r.depto; });
+  (P.raw||[]).forEach(function(r){ var e=m[r.legajo]; if(!e) return; if(r.distrito) e.distrito=r.distrito; if(r.segmento) e.segmento=r.segmento; if(r.depto) e.depto=r.depto; if(r.pais) e.pais=r.pais; });
   NAV_IDX.map=m; NAV_IDX.uni=hasP?uni:null; NAV_IDX.p=P.raw; NAV_IDX.c=C.raw; NAV_IDX.n=N.raw;
-  N.raw.forEach(function(r){ var e=m[r.legajo]; r.distrito=(e&&e.distrito)||'Sin dato'; r.segmento=(e&&e.segmento)||''; r.deptoP=(e&&e.depto)||''; });
+  var inFile={}, paisDisp={}, tiendaByDepto={}, tiendaNorm={};
+  N.raw.forEach(function(r){
+    inFile[r.legajo]=1; paisDisp[normUpper(r.pais)]=r.pais; tiendaNorm[normUpper(r.tienda)]=r.tienda;
+    var e=m[r.legajo]; r.distrito=(e&&e.distrito)||'Sin dato'; r.segmento=(e&&e.segmento)||''; r.deptoP=(e&&e.depto)||''; r.ingreso=true;
+    if(e&&e.depto) tiendaByDepto[normUpper(e.depto)]=r.tienda;
+  });
+  // Nombre de tienda: el del archivo si coincide (por nombre o por lo que declaran sus participantes); si no, el de Programas
+  var roster=[];
+  if(hasP){
+    for(var k in uni){
+      if(inFile[k]) continue;
+      var e=m[k]; if(!e) continue;
+      var dn=normUpper(e.depto);
+      roster.push({legajo:k,nombre:e.nombre||'',pais:paisDisp[normUpper(e.pais)]||navTitle(e.pais),marca:'',
+        tienda:tiendaByDepto[dn]||tiendaNorm[dn]||e.depto||'',cajitas:0,progreso:0,minutos:0,ultimo:'',ultimoDate:null,
+        distrito:e.distrito||'Sin dato',segmento:e.segmento||'',deptoP:e.depto||'',ingreso:false});
+    }
+  }
+  NAV_IDX.roster=roster;
 }
 
 // ── Filtros en cascada (mismo patrón que pCascade) ──
@@ -5363,7 +5393,7 @@ function navCascade(){
     else if(id==='nFDistrito') vals=base.map(function(r){return r.distrito;});
     else if(id==='nFTienda') vals=base.map(function(r){return r.tienda;});
     else if(id==='nFNombre') vals=base.map(function(r){return r.nombre;});
-    else if(id==='nFEstado') vals=['Completó (100%)','En progreso','Sin avance'];
+    else if(id==='nFEstado') vals=['No ingresó','Sin avance','En progreso','Completó (100%)'];
     else vals=[];
     var seen={},clean=[];
     for(var i=0;i<vals.length;i++){var v=String(vals[i]||'').trim();if(v&&v!=='-'&&!seen[v]){seen[v]=1;clean.push(v);}}
@@ -5388,7 +5418,7 @@ function _navFilter(){
   N.scoped=navScopeRows();
   var pg=g('nFPaisGroup'); if(pg) pg.style.display=(CF&&CF.length===1)?'none':'';
   g('nvFileName').textContent=N.meta.fileName||'-';
-  g('nvRowCount').textContent=String(N.raw.length);
+  g('nvRowCount').textContent=String(N.raw.length)+' (ingresaron)';
   g('nvExported').textContent=N.meta.exportado||'-';
   g('nvLoadTime').textContent=N.meta.loadTime||'-';
   navCascade();
@@ -5400,56 +5430,58 @@ function _navFilter(){
 }
 function navClear(){N.cfg.forEach(function(f){N.fSel[f.id]={};});navDoFilter();}
 
-// ── Universo (nómina) para % de ingreso: legajos únicos de Programas dentro de los filtros geográficos ──
-function navUniverse(){
-  if(nGetSel('nFNombre').length||nGetSel('nFEstado').length) return null;
-  if(!NAV_IDX.uni) return (!navHasFilters()&&CU==='global'&&N.nomina)?N.nomina:null;
-  var sP=nGetSel('nFPais').map(normUpper), sD=nGetSel('nFDistrito'), sT=nGetSel('nFTienda');
-  var tset={};
-  sT.forEach(function(t){ tset[normUpper(t)]=1; });
-  N.scoped.forEach(function(r){ if(sT.indexOf(r.tienda)>=0&&r.deptoP) tset[normUpper(r.deptoP)]=1; });
-  // Sin filtro de país, un login de país ya trae su alcance en Programas; Global/staff cuentan todo Programas.
-  var n=0;
-  for(var k in NAV_IDX.uni){
-    var u=NAV_IDX.uni[k];
-    if(sP.length&&sP.indexOf(normUpper(u.pais))<0) continue;
-    if(sD.length&&sD.indexOf(u.distrito)<0) continue;
-    if(sT.length&&!tset[normUpper(u.depto)]) continue;
-    n++;
-  }
-  return n;
-}
+// ── KPIs (nómina = todos los del filtro; el resto de las métricas, sobre quienes ingresaron) ──
 function navStats(rows){
-  var n=rows.length,s=0,full=0,caj=0,min=0,last=null;
-  rows.forEach(function(r){s+=r.progreso;if(r.progreso>=100)full++;caj+=r.cajitas;min+=r.minutos;if(r.ultimoDate&&(!last||r.ultimoDate>last))last=r.ultimoDate;});
-  return {n:n,avg:n?Math.round(s/n):0,full:full,fullPct:n?Math.round(full*100/n):0,caj:caj,min:n?Math.round(min/n):0,last:last};
+  var ent=rows.filter(function(r){return r.ingreso!==false;});
+  var n=ent.length,s=0,full=0,caj=0,min=0,last=null;
+  ent.forEach(function(r){s+=r.progreso;if(r.progreso>=100)full++;caj+=r.cajitas;min+=r.minutos;if(r.ultimoDate&&(!last||r.ultimoDate>last))last=r.ultimoDate;});
+  var nom=rows.length;
+  return {n:n,nom:nom,no:nom-n,avg:n?Math.round(s/n):0,full:full,fullPct:n?Math.round(full*100/n):0,caj:caj,min:n?Math.round(min/n):0,last:last,ingPct:nom?(n*100/nom):0};
 }
+// Nómina disponible para el cálculo actual: con Programas, todos los del filtro; sin Programas, solo el total del archivo para Global sin filtros.
+function navNomina(st){
+  if(navHasRoster()) return st.nom;
+  if(!navHasFilters()&&CU==='global'&&N.nomina) return N.nomina;
+  return null;
+}
+function navFmtPct(v){ return (v<10&&v>0?v.toFixed(1):Math.round(v))+'%'; }
 function navKPIs(){
-  var st=navStats(N.filt), uni=navUniverse();
+  var st=navStats(N.filt), nom=navNomina(st);
   g('nKpiUsers').textContent=st.n.toLocaleString();
   g('nKpiAvg').textContent=st.avg+'%';
   g('nKpiFull').textContent=st.full.toLocaleString();
-  g('nKpiFullSub').textContent=st.n?(st.fullPct+'% de los participantes'):'';
+  g('nKpiFullSub').textContent=st.n?(st.fullPct+'% de los que ingresaron'):'';
   g('nKpiCaj').textContent=st.caj.toLocaleString();
   g('nKpiMin').textContent=st.min;
   g('nKpiLast').textContent=navFmtDT(st.last);
-  if(uni&&uni>0){
-    var pct=Math.min(100,st.n*100/uni);
-    g('nKpiIngreso').textContent=(pct<10?pct.toFixed(1):Math.round(pct))+'%';
-    g('nKpiUsersSub').textContent='de '+uni.toLocaleString()+' en nómina';
-    g('nKpiIngresoSub').textContent=st.n+' de '+uni.toLocaleString();
+  if(nom&&nom>0){
+    var pct=Math.min(100,st.n*100/nom);
+    g('nKpiNomina').textContent=nom.toLocaleString();
+    g('nKpiNominaSub').textContent=navHasRoster()?'según Programas + archivo':'total del archivo';
+    g('nKpiIngreso').textContent=navFmtPct(pct);
+    g('nKpiIngresoSub').textContent=st.n.toLocaleString()+' de '+nom.toLocaleString();
+    g('nKpiNo').textContent=Math.max(0,nom-st.n).toLocaleString();
+    g('nKpiNoSub').textContent='todavía no ingresaron';
   }else{
-    g('nKpiIngreso').textContent='-';
-    g('nKpiUsersSub').textContent='';
-    g('nKpiIngresoSub').textContent=NAV_IDX.uni?'no aplica con este filtro':'requiere Programas cargado';
+    g('nKpiNomina').textContent='-'; g('nKpiNominaSub').textContent=NAV_IDX.uni?'no aplica con este filtro':'requiere Programas cargado';
+    g('nKpiIngreso').textContent='-'; g('nKpiIngresoSub').textContent='';
+    g('nKpiNo').textContent='-'; g('nKpiNoSub').textContent='';
   }
 }
-function navDelta(a,b){var d=a-b;return '<span class="nav-chip '+(d>0?'up':d<0?'down':'eq')+'">'+(d>0?'▲ +':d<0?'▼ ':'= ')+d+' pp</span>';}
+function navDelta(a,b){var d=Math.round(a-b);return '<span class="nav-chip '+(d>0?'up':d<0?'down':'eq')+'">'+(d>0?'▲ +':d<0?'▼ ':'= ')+d+' pp</span>';}
 function navBench(){
   var el=g('nBench'); var base=navStats(N.scoped), cur=navStats(N.filt);
   var lbl=(CF&&CF.length===1)?'tu país':'total';
-  var h='<span>Referencia general ('+lbl+', sin filtros): <b>'+base.n+'</b> participantes</span><span>Progreso prom. <b>'+base.avg+'%</b></span><span>Completaron 100%: <b>'+base.full+'</b> ('+base.fullPct+'%)</span><span>Permanencia <b>'+base.min+' min</b></span>';
-  if(navHasFilters()&&cur.n) h+='<span>Tu selección vs. general: progreso '+navDelta(cur.avg,base.avg)+' &nbsp; completaron 100% '+navDelta(cur.fullPct,base.fullPct)+'</span>';
+  var hasR=navHasRoster();
+  var h='<span>Referencia general ('+lbl+', sin filtros): ';
+  h+= hasR ? '<b>'+base.nom.toLocaleString()+'</b> en nómina · <b>'+base.n.toLocaleString()+'</b> ingresaron (<b>'+navFmtPct(base.ingPct)+'</b>)' : '<b>'+base.n.toLocaleString()+'</b> participantes';
+  h+='</span><span>Progreso prom. <b>'+base.avg+'%</b></span><span>Completaron 100%: <b>'+base.full+'</b> ('+base.fullPct+'%)</span><span>Permanencia <b>'+base.min+' min</b></span>';
+  if(navHasFilters()&&cur.nom){
+    var d='';
+    if(hasR) d+=' % ingresó '+navDelta(cur.ingPct,base.ingPct);
+    if(cur.n) d+=' &nbsp; progreso '+navDelta(cur.avg,base.avg);
+    if(d) h+='<span>Tu selección vs. general:'+d+'</span>';
+  }
   el.innerHTML=h;
 }
 
@@ -5464,16 +5496,20 @@ function navC1(){
   if(!sP.length&&!(CF&&CF.length===1)&&!sD.length){lvl='pais';sub='por País';}
   else if(!sD.length){lvl='distrito';sub='por Distrito';}
   else{lvl='tienda';sub='por Tienda';}
-  g('nCS1').textContent=sub;
-  var grp={};N.filt.forEach(function(r){var k=r[lvl]||'Sin dato';if(!grp[k])grp[k]={n:0,s:0};grp[k].n++;grp[k].s+=r.progreso;});
-  var items=Object.keys(grp).map(function(k){return{l:k,n:grp[k].n,p:Math.round(grp[k].s/grp[k].n)};}).sort(function(a,b){return a.n-b.n;});
+  var hasR=navHasRoster();
+  g('nCS1').textContent=sub+(hasR?' · % que ingresó sobre la nómina':' · participantes');
+  var grp={};N.filt.forEach(function(r){var k=r[lvl]||'Sin dato';if(!grp[k])grp[k]={nom:0,n:0,s:0};grp[k].nom++;if(r.ingreso!==false){grp[k].n++;grp[k].s+=r.progreso;}});
+  var items=Object.keys(grp).map(function(k){var o=grp[k];return{l:k,nom:o.nom,n:o.n,ing:o.nom?o.n*100/o.nom:0,p:o.n?Math.round(o.s/o.n):0};});
+  if(hasR) items.sort(function(a,b){return a.ing-b.ing||a.n-b.n;}); else items.sort(function(a,b){return a.n-b.n;});
   if(!items.length){Plotly.purge('nC1');return;}
   g('nC1').style.height=Math.max(260,items.length*30+70)+'px';
-  Plotly.newPlot('nC1',[{type:'bar',orientation:'h',y:items.map(function(i){return i.l;}),x:items.map(function(i){return i.n;}),
-    marker:{color:items.map(function(i){return i.p>=70?'#1F6D4F':i.p>=40?'#4FA37F':'#D93A3A';})},
-    text:items.map(function(i){return i.n+' · '+i.p+'%';}),textposition:'outside',cliponaxis:false,
-    customdata:items.map(function(i){return i.p;}),hovertemplate:'<b>%{y}</b><br>Participantes: %{x}<br>Progreso prom.: %{customdata}%<extra></extra>'}],
-    {margin:{t:10,b:36,l:10,r:60},xaxis:{title:'Participantes (etiqueta: participantes · progreso prom.)',rangemode:'tozero'},yaxis:{automargin:true},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},
+  var xs=items.map(function(i){return hasR?Math.round(i.ing*10)/10:i.n;});
+  Plotly.newPlot('nC1',[{type:'bar',orientation:'h',y:items.map(function(i){return i.l;}),x:xs,
+    marker:{color:'#1F6D4F'},
+    text:items.map(function(i){return hasR?(i.n+' de '+i.nom+' · '+navFmtPct(i.ing)):(i.n+' participantes');}),textposition:'outside',cliponaxis:false,
+    customdata:items.map(function(i){return [i.n,i.nom,i.p];}),
+    hovertemplate:hasR?'<b>%{y}</b><br>Ingresaron: %{customdata[0]} de %{customdata[1]} en nómina<br>% ingresó: %{x}%<br>Progreso prom. (de quienes ingresaron): %{customdata[2]}%<extra></extra>':'<b>%{y}</b><br>Participantes: %{x}<br>Progreso prom.: %{customdata[2]}%<extra></extra>'}],
+    {margin:{t:10,b:36,l:10,r:110},xaxis:{title:hasR?'% de la nómina que ingresó':'Participantes',rangemode:'tozero',ticksuffix:hasR?'%':''},yaxis:{automargin:true},font:{family:'Inter',size:11},plot_bgcolor:'#fff',paper_bgcolor:'#fff'},
     {displayModeBar:false,responsive:true});
 }
 function navC2(){
@@ -5495,6 +5531,7 @@ function navSorted(data){
   return data.slice().sort(function(a,b){
     var av=a[c],bv=b[c];
     if(c==='cajitas'||c==='progreso'||c==='minutos') return d*((av||0)-(bv||0));
+    if(c==='ingreso') return d*((av===false?0:1)-(bv===false?0:1));
     if(c==='ultimoDate'){ av=av?av.getTime():0; bv=bv?bv.getTime():0; return d*(av-bv); }
     return d*String(av||'').toLowerCase().localeCompare(String(bv||'').toLowerCase(),'es');
   });
@@ -5506,25 +5543,25 @@ function navTable(){
   data=navSorted(data);
   var tp=Math.ceil(data.length/PS);if(N.page>tp)N.page=tp||1;
   var pd=data.slice((N.page-1)*PS,N.page*PS);
-  g('nTCount').textContent=data.length.toLocaleString()+' participantes';
+  g('nTCount').textContent=data.length.toLocaleString()+(navHasRoster()?' personas de la nómina':' participantes');
   var ss=N_SORT;
   document.querySelector('#nTable thead tr').innerHTML=
     mkSortHeader('Legajo','legajo',ss,navTable)+mkSortHeader('Nombre','nombre',ss,navTable)+mkSortHeader('Pais','pais',ss,navTable)+
     mkSortHeader('Distrito','distrito',ss,navTable)+mkSortHeader('Tienda','tienda',ss,navTable)+mkSortHeader('Cajitas','cajitas',ss,navTable)+
-    mkSortHeader('Progreso','progreso',ss,navTable)+mkSortHeader('Permanencia (min)','minutos',ss,navTable)+mkSortHeader('Ultimo acceso','ultimoDate',ss,navTable);
+    mkSortHeader('Progreso','progreso',ss,navTable)+mkSortHeader('Permanencia (min)','minutos',ss,navTable)+mkSortHeader('Ultimo acceso','ultimoDate',ss,navTable)+mkSortHeader('Ingreso','ingreso',ss,navTable);
   document.querySelectorAll('#nTable thead th.sortable').forEach(function(th){th.addEventListener('click',function(){handleSort(th,N_SORT,navTable);});});
   var h='';
   pd.forEach(function(r){
     var pc=r.progreso>=100?'#1F6D4F':r.progreso>=50?'#4FA37F':'#D93A3A';
     var pb='<div style="display:flex;align-items:center;gap:5px"><div style="width:52px;height:7px;background:#eee;border-radius:3px;overflow:hidden"><div style="width:'+Math.min(100,r.progreso)+'%;height:100%;background:'+pc+';border-radius:3px"></div></div><span style="font-size:.72rem">'+r.progreso+'%</span></div>';
-    h+='<tr><td style="white-space:nowrap">'+esc(r.legajo)+'</td><td style="font-weight:500;min-width:170px">'+esc(r.nombre)+'</td><td style="white-space:nowrap">'+esc(r.pais)+'</td><td>'+esc(r.distrito)+'</td><td title="'+esc(r.tienda)+'">'+esc(trunc(r.tienda,34))+'</td><td>'+r.cajitas+'</td><td>'+pb+'</td><td>'+r.minutos+'</td><td style="white-space:nowrap">'+navFmtDT(r.ultimoDate)+'</td></tr>';
+    h+='<tr><td style="white-space:nowrap">'+esc(r.legajo)+'</td><td style="font-weight:500;min-width:170px">'+esc(r.nombre)+'</td><td style="white-space:nowrap">'+esc(r.pais)+'</td><td>'+esc(r.distrito)+'</td><td title="'+esc(r.tienda)+'">'+esc(trunc(r.tienda,34))+'</td><td>'+(r.ingreso===false?'-':r.cajitas)+'</td><td>'+(r.ingreso===false?'-':pb)+'</td><td>'+(r.ingreso===false?'-':r.minutos)+'</td><td style="white-space:nowrap">'+(r.ingreso===false?'-':navFmtDT(r.ultimoDate))+'</td><td>'+(r.ingreso===false?'<span style="padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:600;background:#FCEBEB;color:#A32D2D;white-space:nowrap">No ingresó</span>':'<span style="padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:600;background:#E1F2E9;color:#1F6D4F">Ingresó</span>')+'</td></tr>';
   });
-  document.querySelector('#nTable tbody').innerHTML=h||'<tr><td colspan="9" style="text-align:center;color:#aaa;padding:24px">Sin resultados</td></tr>';
+  document.querySelector('#nTable tbody').innerHTML=h||'<tr><td colspan="10" style="text-align:center;color:#aaa;padding:24px">Sin resultados</td></tr>';
   mkPag('nPag',N,tp,navTable);
 }
 function navExport(){
-  var hdr=['Legajo','Nombre','Pais','Distrito','Tienda','Cajitas abiertas','% progreso','Permanencia (min)','Ultimo acceso'];
-  var rows=navSorted(N.filt).map(function(r){return [r.legajo,r.nombre,r.pais,r.distrito,r.tienda,r.cajitas,r.progreso,r.minutos,r.ultimo];});
+  var hdr=['Legajo','Nombre','Pais','Distrito','Tienda','Ingreso','Cajitas abiertas','% progreso','Permanencia (min)','Ultimo acceso'];
+  var rows=navSorted(N.filt).map(function(r){var e=r.ingreso!==false;return [r.legajo,r.nombre,r.pais,r.distrito,r.tienda,e?'Ingresó':'No ingresó',e?r.cajitas:'',e?r.progreso:'',e?r.minutos:'',e?r.ultimo:''];});
   downloadXLSX(hdr,rows,'operacion_navidad_export.xlsx','Participantes');
 }
 
